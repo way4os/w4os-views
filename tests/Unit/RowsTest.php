@@ -40,6 +40,21 @@ describe('the request of an action', function () {
             ->toBe(['POST', '/password-resets', ['type' => 'password-resets', 'attributes' => ['name' => 'Ada Love', 'link' => 'https://site.example.org/reset?token={token}']], true]);
     });
 
+    test('an action of the machine asked outside the grid, its path filled from the row', function () {
+        $action = ['name' => 'start', 'method' => 'POST', 'path' => '/instances/{slug}/start'];
+
+        expect(Rows::request($action, ['id' => 'h:9040', 'slug' => 'demo.solo']))->toBe(['POST', '/instances/demo.solo/start', ['type' => 'start', 'attributes' => []], false])
+            ->and(Rows::request(['method' => 'PATCH', 'path' => '/grids/{grid}/regions/{id}'], ['uuid' => 'r 1'])[1])->toBe('/regions/r%201')
+            ->and(Rows::request(['method' => 'PATCH', 'path' => '/grids/{grid}/regions/{id}'], ['uuid' => 'r1'])[3])->toBeTrue();
+    });
+
+    test('a condition on a dotted path (connections.console)', function () {
+        $row = ['id' => 'h:9040', 'connections' => ['console' => 'ok', 'robust' => 'none']];
+        $list = ['actions' => [['name' => 'console', 'method' => 'POST', 'path' => '/x', 'when' => ['connections.console' => ['ok']]], ['name' => 'robust', 'method' => 'POST', 'path' => '/y', 'when' => ['connections.robust' => ['ok']]]]];
+
+        expect(array_column(Rows::actions($list, $row), 'name'))->toBe(['console']);
+    });
+
     test('a value by its dotted path, the id of a row', function () {
         expect(Rows::value(['connections' => ['console' => 'ok']], 'connections.console'))->toBe('ok')
             ->and(Rows::value(['connections' => null], 'connections.console'))->toBeNull()
