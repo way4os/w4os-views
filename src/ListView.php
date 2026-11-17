@@ -43,10 +43,14 @@ final readonly class ListView
      *     the attribute that gives one; the first a row has is the link of its name
      * @param ?string $self the UUID of the avatar of whoever looks
      * @param ?int $level their user level; null: not checked
+     * @param array<string,mixed> $fixed the filters the bridge always asks one value of (`grid`: the grid of the site): their
+     *     column and the filter are left out, every row has that value
      */
-    public static function of(array $list, array $items, array $meta, array $query, array $links = [], ?string $self = null, ?int $level = null): self
+    public static function of(array $list, array $items, array $meta, array $query, array $links = [], ?string $self = null, ?int $level = null, array $fixed = []): self
     {
         $list += ['columns' => [], 'filters' => [], 'actions' => [], 'sort' => []];
+        $list['columns'] = array_values(array_filter($list['columns'], fn (array $column) => ! array_key_exists((string) ($column['name'] ?? ''), $fixed)));
+        $list['filters'] = array_values(array_filter($list['filters'], fn (array $filter) => ! array_key_exists((string) ($filter['name'] ?? ''), $fixed)));
         $columns = array_map(fn (array $column, int $i) => self::column($column, $i === 0, (array) $list['sort'] + ['default' => '', 'descending' => '-'], $query), $list['columns'], array_keys($list['columns']));
         $names = array_column($list['filters'], 'name');
         $total = (int) ($meta['total'] ?? count($items));

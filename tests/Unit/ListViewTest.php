@@ -94,6 +94,16 @@ describe('a list to show', function () {
         expect($view->rows[0]->id)->toBe('x')->and($view->rows[0]->actions)->toBe([])->and($view->columns[0]->sort)->toBeNull();
     });
 
+    test('a filter the bridge fixes to one value: its column and the filter hidden, every row has that value', function () use ($solo) {
+        $list = (new Contract(contract()))->listOf('simulators');
+        $view = ListView::of($list, [$solo], [], ['grid' => 'other'], fixed: ['grid' => 'demo']);
+
+        expect(array_map(fn ($c) => $c->name, $view->columns))->toBe(['name', 'httpPort', 'status'])
+            ->and(array_column($view->list['filters'], 'name'))->not->toContain('grid')
+            ->and($view->activeFilters)->toBe(0)
+            ->and(array_map(fn ($c) => $c->name, ListView::of($list, [$solo], [], [])->columns))->toContain('grid');
+    });
+
     test('its pages from the meta of the engine', function () {
         $view = ListView::of((new Contract(contract()))->listOf('avatars'), [], ['total' => 120, 'page' => 2, 'perPage' => 50], []);
 
