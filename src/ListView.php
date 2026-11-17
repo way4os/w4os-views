@@ -46,7 +46,8 @@ final readonly class ListView
      */
     public static function of(array $list, array $items, array $meta, array $query, array $links = [], ?string $self = null, ?int $level = null): self
     {
-        $columns = array_map(fn (array $column, int $i) => self::column($column, $i === 0, (array) $list['sort'], $query), $list['columns'], array_keys($list['columns']));
+        $list += ['columns' => [], 'filters' => [], 'actions' => [], 'sort' => []];
+        $columns = array_map(fn (array $column, int $i) => self::column($column, $i === 0, (array) $list['sort'] + ['default' => '', 'descending' => '-'], $query), $list['columns'], array_keys($list['columns']));
         $names = array_column($list['filters'], 'name');
         $total = (int) ($meta['total'] ?? count($items));
 
@@ -69,7 +70,7 @@ final readonly class ListView
      * state from the query of the page (its `sort`, the default of the list without it).
      *
      * @param array<string,mixed> $column
-     * @param array{default: string, values: list<string>, descending: string} $sort
+     * @param array{default: string, descending: string} $sort
      * @param array<string,mixed> $query
      */
     private static function column(array $column, bool $first, array $sort, array $query): ColumnView

@@ -88,6 +88,12 @@ describe('a list to show', function () {
             ->and($view->total)->toBe(0);
     });
 
+    test('a list the contract describes only in part: its columns alone', function () {
+        $view = ListView::of(['columns' => [['name' => 'name']]], [['uuid' => 'x', 'name' => 'X']], [], []);
+
+        expect($view->rows[0]->id)->toBe('x')->and($view->rows[0]->actions)->toBe([])->and($view->columns[0]->sort)->toBeNull();
+    });
+
     test('its pages from the meta of the engine', function () {
         $view = ListView::of((new Contract(contract()))->listOf('avatars'), [], ['total' => 120, 'page' => 2, 'perPage' => 50], []);
 

@@ -22,7 +22,7 @@ final class Rows
      */
     public static function actions(array $list, array $item, ?string $self = null, ?int $level = null): array
     {
-        return array_values(array_filter($list['actions'], fn (array $action) => self::applies($action, $item, $self)
+        return array_values(array_filter((array) ($list['actions'] ?? []), fn (array $action) => self::applies($action, $item, $self)
             && ($level === null || ((! isset($action['access']) || Access::allows($action['access'], $level, $self !== null && self::id($item) === $self))
                 && $level >= (int) ($action['level'] ?? 0)))));
     }
