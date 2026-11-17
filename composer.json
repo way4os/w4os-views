@@ -1,0 +1,53 @@
+{
+    "name": "magicoli/w4os-views",
+    "description": "The view models of the w4os bridges: what a list, an item, a form or a card of the engine shows, read from its contract and its answers, for each bridge to render its own way",
+    "type": "library",
+    "license": "AGPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "Gudule Lapointe",
+            "email": "gudule@speculoos.world"
+        }
+    ],
+    "repositories": [
+        {
+            "name": "magicoli/opensim-engine",
+            "url": "../opensim-engine/",
+            "type": "path",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "ext-intl": "*",
+        "nesbot/carbon": "3.15.1",
+        "symfony/translation": "^7.4",
+        "symfony/clock": "^7.4"
+    },
+    "require-dev": {
+        "pestphp/pest": "^4.0",
+        "magicoli/build-tools": "^0.1.2",
+        "magicoli/opensim-engine": "@dev"
+    },
+    "suggest": {
+        "magicoli/opensim-engine": "the engine's own rules (Access, Catalog) when the bridge bundles it; without it, the same rules read from its contract"
+    },
+    "autoload": {
+        "psr-4": {
+            "W4OS\\Views\\": "src/"
+        }
+    },
+    "scripts": {
+        "test": "pest"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        },
+        "sort-packages": false
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

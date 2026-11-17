@@ -1,0 +1,9 @@
+# What the zip leaves out, among what git tracks: /name is at the root, name is anywhere
+/.distignore
+/.editorconfig
+/.github
+/.gitignore
+/DEVELOPERS.md
+/dev
+/tests
+/phpunit.xml.dist
