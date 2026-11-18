@@ -13,11 +13,11 @@ describe('a list to show', function () {
         $view = ListView::of((new Contract(contract()))->listOf('simulators'), [$solo], ['total' => 1], []);
         $columns = array_column(array_map(fn ($c) => (array) $c, $view->columns), null, 'name');
 
-        expect(array_keys($columns))->toBe(['name', 'grid', 'httpPort', 'status'])
+        expect(array_keys($columns))->toBe(['name', 'grid', 'server', 'httpPort', 'regions', 'area', 'avatars', 'cpu', 'memory', 'status'])
             ->and($columns['name']['primary'])->toBeTrue()->and($columns['status']['primary'])->toBeTrue()
             ->and($columns['grid']['primary'])->toBeFalse()
             ->and($columns['grid']['bare'])->toBeFalse()
-            ->and(array_column(array_map(fn ($c) => (array) $c, $view->secondary), 'name'))->toBe(['grid', 'httpPort']);
+            ->and(array_column(array_map(fn ($c) => (array) $c, $view->secondary), 'name'))->toBe(['grid', 'server', 'httpPort', 'regions', 'area', 'avatars', 'cpu', 'memory']);
 
         $avatars = ListView::of((new Contract(contract()))->listOf('avatars'), [], ['total' => 0], []);
         $bare = array_column(array_map(fn ($c) => (array) $c, $avatars->columns), 'bare', 'name');
@@ -98,7 +98,7 @@ describe('a list to show', function () {
         $list = (new Contract(contract()))->listOf('simulators');
         $view = ListView::of($list, [$solo], [], ['grid' => 'other'], fixed: ['grid' => 'demo']);
 
-        expect(array_map(fn ($c) => $c->name, $view->columns))->toBe(['name', 'httpPort', 'status'])
+        expect(array_map(fn ($c) => $c->name, $view->columns))->toBe(['name', 'server', 'httpPort', 'regions', 'area', 'avatars', 'cpu', 'memory', 'status'])
             ->and(array_column($view->list['filters'], 'name'))->not->toContain('grid')
             ->and($view->activeFilters)->toBe(0)
             ->and(array_map(fn ($c) => $c->name, ListView::of($list, [$solo], [], [])->columns))->toContain('grid');
