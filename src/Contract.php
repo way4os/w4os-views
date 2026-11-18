@@ -98,6 +98,33 @@ final class Contract
     }
 
     /**
+     * The stream of an avatar, as the operation that writes a post describes it (`x-form`): its fields, the key of its button, the
+     * actions of a post with who may do each, who may write one (`write`). Null when the engine describes none.
+     *
+     * @return ?array{fields: list<array<string,mixed>>, submit: string, actions: list<array<string,mixed>>, write: array<string,mixed>, path: string, scoped: bool}
+     */
+    public function postsOf(): ?array
+    {
+        foreach ((array) ($this->document['paths'] ?? []) as $path => $item) {
+            if (preg_match('#^(/grids/\{grid\})?/avatars/\{id\}/posts$#', (string) $path) === 1 && isset($item['post']['x-form'])) {
+                $x = (array) $item['post']['x-form'];
+                $fields = array_values(array_map(fn ($field) => $field + ['label' => 'field_'.$field['name'], 'type' => 'text'], array_filter((array) ($x['fields'] ?? []), fn ($field) => isset($field['name']))));
+
+                return [
+                    'fields' => $fields,
+                    'submit' => (string) ($x['submit'] ?? 'action_post'),
+                    'actions' => $this->withAccess((array) ($x['actions'] ?? [])),
+                    'write' => $this->access('POST', (string) $path),
+                    'path' => (string) $path,
+                    'scoped' => str_starts_with((string) $path, '/grids/{grid}'),
+                ];
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * The filters of an x-list: a choice among values (several when `multiple`; the useful ones, when `dynamic`, in the meta of
      * the list: `available`), or a free value (`format`).
      *
