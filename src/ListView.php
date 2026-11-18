@@ -3,8 +3,8 @@
 namespace W4OS\Views;
 
 /**
- * A list of the engine to show: its columns, the ones a narrow screen shows under the name (`secondary`), its rows, its count and
- * its pages, the filters chosen and the query that removes them.
+ * A list of the engine to show: its columns, the ones a narrow screen shows under the name (`secondary`), its rows, its filters
+ * (FilterView), its count and its pages, the filters chosen and the query that removes them.
  */
 final readonly class ListView
 {
@@ -16,6 +16,7 @@ final readonly class ListView
      * @param list<ColumnView> $columns
      * @param list<ColumnView> $secondary
      * @param list<RowView> $rows
+     * @param list<FilterView> $filters the filters the page shows, their values and what it asks of them
      * @param array<string,mixed> $query the query of the page
      * @param array<string,mixed> $clearQuery the query without the filters chosen nor its page
      */
@@ -24,6 +25,7 @@ final readonly class ListView
         public array $columns,
         public array $secondary,
         public array $rows,
+        public array $filters,
         public int $total,
         public int $page,
         public int $pages,
@@ -53,6 +55,7 @@ final readonly class ListView
         $list['filters'] = array_values(array_filter($list['filters'], fn (array $filter) => ! array_key_exists((string) ($filter['name'] ?? ''), $fixed)));
         $columns = array_map(fn (array $column, int $i) => self::column($column, $i === 0, (array) $list['sort'] + ['default' => '', 'descending' => '-'], $query), $list['columns'], array_keys($list['columns']));
         $names = array_column($list['filters'], 'name');
+        $filters = array_map(fn (array $filter) => FilterView::of($filter, $query), $list['filters']);
         $total = (int) ($meta['total'] ?? count($items));
 
         return new self(
@@ -60,10 +63,11 @@ final readonly class ListView
             $columns,
             array_values(array_filter($columns, fn (ColumnView $column) => ! $column->primary)),
             array_map(fn (array $item) => self::row($list, $item, $links, $self, $level), $items),
+            $filters,
             $total,
             (int) ($meta['page'] ?? 1),
             (int) ceil($total / max(1, (int) ($meta['perPage'] ?? 0) ?: 50)),
-            count(array_filter($names, fn (string $name) => ! empty($query[$name]))),
+            count(array_filter($filters, fn (FilterView $filter) => $filter->active)),
             array_diff_key($query, array_flip([...$names, 'page'])),
             $query,
         );
