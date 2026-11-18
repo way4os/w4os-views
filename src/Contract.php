@@ -204,6 +204,22 @@ final class Contract
     }
 
     /**
+     * Who may change what belongs to the site, not to the engine (`settings`: its own settings, its theme...), as the contract says
+     * it (`x-site`); an engine that does not say it yet: its rule (Api\Access::site()); nobody else.
+     *
+     * @return array{level: ?int, self: bool}
+     */
+    public function siteAccess(string $name): array
+    {
+        $site = $this->document['x-site'] ?? (class_exists(\OpenSim\Api\Access::class) && method_exists(\OpenSim\Api\Access::class, 'site') ? \OpenSim\Api\Access::site() : []);
+        $access = (array) ($site[$name] ?? []);
+
+        return isset($access['level']) || array_key_exists('level', $access)
+            ? ['level' => $access['level'] === null ? null : (int) $access['level'], 'self' => (bool) ($access['self'] ?? false)]
+            : ['level' => PHP_INT_MAX, 'self' => false];
+    }
+
+    /**
      * The actions of a list or an item, each with who may do it (`access`).
      *
      * @param array<mixed> $actions

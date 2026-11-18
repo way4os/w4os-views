@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- new (access): who may change the settings of the site, as the contract says it (`Contract::siteAccess()`, `x-site`), the engine's rule without it
 - new (posts): the stream of an avatar for the avatar itself (PostsView, Contract::postsOf()): the fields that write a post as the engine describes them, the actions of its posts, the requests that do them; nobody else gets one
 - new (items): the form of an item (FormView): the roles of the viewer, its groups with the fields it sees, the fields it changes with their value, the ones it may not, and what a posted form changes
 - new (items): the view of an item (ItemView): its header (name and picture as its list shows them, round for a person; its state, the indicators of its row; its actions, the safe ones first) and its groups of fields without what the header shows
