@@ -78,6 +78,16 @@ final readonly class FormView
         foreach ($this->fields as $field) {
             $name = $field['name'];
             $before = $this->item[$name] ?? null;
+            // A field of several values (the avatars of a list): a list of strings, the same in any order
+            if (! empty($field['multiple']) || is_array($posted[$name] ?? null)) {
+                $value = self::listOf($posted[$name] ?? []);
+                $sorted = $value;
+                $was = self::listOf($before ?? []);
+                sort($sorted);
+                sort($was);
+                $sorted === $was || $changes[$name] = $value;
+                continue;
+            }
             $value = match ($field['type'] ?? '') {
                 'boolean' => (bool) ($posted[$name] ?? false),
                 'checkboxes' => self::checked($posted[$name] ?? []),
@@ -94,6 +104,18 @@ final readonly class FormView
         }
 
         return $changes;
+    }
+
+    /**
+     * The values of a field of several: its strings, the empty ones left out (one value alone counts as a list of one).
+     *
+     * @return list<string>
+     */
+    private static function listOf(mixed $values): array
+    {
+        $values = is_array($values) ? $values : ($values === null || $values === '' ? [] : [$values]);
+
+        return array_values(array_filter(array_map(fn ($value) => trim((string) $value), $values), fn (string $value) => $value !== ''));
     }
 
     /**
