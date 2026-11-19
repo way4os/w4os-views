@@ -39,7 +39,7 @@ final readonly class ListView
      *
      * @param array<string,mixed> $list the list (Contract::listOf(), with the filters the page shows)
      * @param list<array<string,mixed>> $items the rows as the engine gives them
-     * @param array<string,mixed> $meta the meta of the engine's answer (total, page, perPage)
+     * @param array<string,mixed> $meta the meta of the engine's answer (total, page, perPage, counts)
      * @param array<string,mixed> $query the query of the page (search, filters, sort, page)
      * @param list<array{key: string, url?: string, attribute?: string}> $links the links of a row: an address with `{uuid}`, or
      *     the attribute that gives one; the first a row has is the link of its name
@@ -55,7 +55,7 @@ final readonly class ListView
         $list['filters'] = array_values(array_filter($list['filters'], fn (array $filter) => ! array_key_exists((string) ($filter['name'] ?? ''), $fixed)));
         $columns = array_map(fn (array $column, int $i) => self::column($column, $i === 0, (array) $list['sort'] + ['default' => '', 'descending' => '-'], $query), $list['columns'], array_keys($list['columns']));
         $names = array_column($list['filters'], 'name');
-        $filters = array_map(fn (array $filter) => FilterView::of($filter, $query), $list['filters']);
+        $filters = array_map(fn (array $filter) => FilterView::of($filter, $query, isset($meta['counts'][$filter['name'] ?? '']) ? (array) $meta['counts'][$filter['name']] : null), $list['filters']);
         $total = (int) ($meta['total'] ?? count($items));
 
         return new self(

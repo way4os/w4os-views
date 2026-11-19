@@ -43,6 +43,16 @@ describe('a filter to show', function () {
             ->and(FilterView::of($filter, [])->values[0])->toMatchArray(['value' => 'h:9020', 'label' => null, 'text' => 'Test Sim', 'chosen' => false]);
     });
 
+    test('each value with the number of rows it gives, as the engine counts them (meta.counts); none when it does not', function () {
+        $list = (new Contract(contract()))->listOf('avatars');
+        $view = ListView::of($list, [], ['total' => 5, 'counts' => ['online' => ['online' => 2, 'offline' => 3]]], []);
+        $online = array_column(array_map(fn (FilterView $f) => (array) $f, $view->filters), null, 'name')['online'];
+        $status = array_column(array_map(fn (FilterView $f) => (array) $f, $view->filters), null, 'name')['status'];
+
+        expect(array_column($online['values'], 'count', 'value'))->toBe(['online' => 2, 'offline' => 3])
+            ->and(array_column($status['values'], 'count'))->each->toBeNull();
+    });
+
     test('a list gives the views of its filters, and counts the ones the page asks', function () {
         $view = ListView::of((new Contract(contract()))->listOf('avatars'), [], [], ['status' => 'active', 'role' => '']);
 
