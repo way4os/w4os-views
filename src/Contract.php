@@ -98,6 +98,45 @@ final class Contract
     }
 
     /**
+     * A form of settings of a grid (`/grids/{grid}/settings/{group}`, read with GET, changed with PATCH), as its `x-form` describes
+     * it: its title and the key of its button, its fields as the ones of an item (values, conditions, who changes each), who reads
+     * and who changes it. Null when the engine describes none.
+     *
+     * @return ?array{group: string, title: string, submit: string, fields: list<array<string,mixed>>, read: array<string,mixed>, change: ?array<string,mixed>, scoped: bool}
+     */
+    public function settingsOf(string $group): ?array
+    {
+        $x = null;
+        $path = '';
+        foreach ((array) ($this->document['paths'] ?? []) as $candidate => $item) {
+            if (preg_match('#^(/grids/\{grid\})?/settings/'.preg_quote($group, '#').'$#', (string) $candidate) === 1 && isset($item['get']['x-form'])) {
+                $x = (array) $item['get']['x-form'];
+                $path = (string) $candidate;
+            }
+        }
+        if ($x === null) {
+            return null;
+        }
+        $change = isset($this->document['paths'][$path]['patch']) ? $this->access('PATCH', $path) : null;
+        $fields = array_values(array_map(function ($field) use ($change) {
+            $field += ['label' => 'field_'.$field['name'], 'type' => 'text', 'group' => ''] + $this->valuesOf($field);
+            $change !== null && ! isset($field['access']['level']) && $field['access']['level'] = $change['level'];
+
+            return $field;
+        }, array_filter((array) ($x['fields'] ?? []), fn ($field) => isset($field['name']))));
+
+        return [
+            'group' => $group,
+            'title' => (string) ($x['title'] ?? 'settings_'.$group),
+            'submit' => (string) ($x['submit'] ?? 'action_save'),
+            'fields' => $fields,
+            'read' => $this->access('GET', $path),
+            'change' => $change,
+            'scoped' => str_starts_with($path, '/grids/{grid}'),
+        ];
+    }
+
+    /**
      * The stream of an avatar, as the operation that writes a post describes it (`x-form`): its fields, the key of its button, the
      * actions of a post with who may do each, who may write one (`write`). Null when the engine describes none.
      *
