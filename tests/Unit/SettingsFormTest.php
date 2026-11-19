@@ -66,4 +66,19 @@ describe('a form of the settings of a service', function () {
             ->and($own->changes(['provide' => '1', 'searchDatabase' => ['useDefault' => '1'] + $parts]))->toBe(['searchDatabase' => ['useDefault' => true]])
             ->and($own->changes(['provide' => '1', 'searchDatabase' => $parts]))->toBe([]);
     });
+
+    test('what the options set is in the form whatever Provide is now, so that checking it shows it', function () {
+        $form = (new Contract(contract()))->settingsOf('offline');
+        $off = W4OS\Views\FormView::of($form, ['provide' => false, 'offlineModule' => 'OfflineMessageModule'], null, true, 250);
+
+        expect(array_column($off->shown, 'name'))->toBe(['offlineModule']);
+    });
+
+    test('a field shown by Provide and by what the options set is in the form whatever Provide is now', function () {
+        $form = (new Contract(contract()))->settingsOf('economy');
+        $off = W4OS\Views\FormView::of($form, ['provide' => false, 'economyModule' => 'DTLNSLMoneyModule'], null, true, 250);
+
+        expect(array_column($off->fields, 'name'))->toContain('moneyDatabase', 'moneyScriptKey', 'economyUrl')
+            ->and(W4OS\Views\FormView::met(array_column($form['fields'], null, 'name')['moneyDatabase'], $off->item))->toBeFalse();
+    });
 });

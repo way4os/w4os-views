@@ -51,10 +51,16 @@ final readonly class FormView
             $fields = array_values(array_filter($form['fields'], fn ($field) => ($field['group'] ?? null) === $group['name'] && self::visible($field, $item, $roles)));
             $fields === [] || $groups[] = $group + ['fields' => $fields];
         }
-        // A field whose condition is on the fields the viewer changes is in the form whatever their values now: what is chosen shows it
+        // A field whose condition is on the fields the viewer changes is in the form whatever their values now: what is chosen shows it;
+        // so is one whose condition is also on what the options set (shown with them), when the item meets that part now (Provide,
+        // and the module of the economy)
         $editable = array_column(array_filter($form['fields'], fn ($field) => self::editable($field, $roles, $level)), 'name');
+        $fixed = array_column(array_filter($form['fields'], fn ($field) => ! empty($field['readOnly'])), 'name');
+        $reachable = fn (array $field) => self::live($field, $editable) || (self::live($field, [...$editable, ...$fixed])
+            && array_intersect(array_keys((array) $field['condition']), $editable) !== []
+            && self::met(['condition' => array_intersect_key((array) $field['condition'], array_flip($fixed))], $item));
         $changed = array_values(array_filter($form['fields'], fn ($field) => self::editable($field, $roles, $level)
-            && (self::visible($field, $item, $roles) || (self::live($field, $editable) && self::visible(['condition' => []] + $field, $item, $roles)))));
+            && (self::visible($field, $item, $roles) || ($reachable($field) && self::visible(['condition' => []] + $field, $item, $roles)))));
         $values = ['id' => Rows::id($item)];
         foreach ($form['fields'] as $field) {
             if (self::editable($field, $roles, $level) && ($field['type'] ?? '') !== 'secret' && empty($field['writeOnly'])) {
@@ -69,7 +75,9 @@ final readonly class FormView
             }
         }
 
-        $shown = array_values(array_filter($form['fields'], fn ($field) => ! empty($field['readOnly']) && self::visible($field, $item, $roles)));
+        // What the options set, shown; with a condition on the fields the viewer changes, whatever their values now
+        $shown = array_values(array_filter($form['fields'], fn ($field) => ! empty($field['readOnly'])
+            && (self::visible($field, $item, $roles) || ($reachable($field) && self::visible(['condition' => []] + $field, $item, $roles)))));
 
         return new self($roles, $groups, $changed, self::locked($form, $roles, $level), $changed !== [], $values, $form, $item, $level, $shown);
     }
