@@ -19,6 +19,13 @@ describe('a list of the contract', function () {
             ->and((new Contract(contract()))->listOf('nothing'))->toBeNull();
     });
 
+    test('its texts as the engine names them, the ones it gives', function () {
+        $contract = new Contract(contract());
+
+        expect($contract->listOf('posts')['texts'])->toBe(['title' => 'flux_title', 'menu' => 'flux_menu', 'placeholder' => 'flux_search', 'empty' => 'flux_empty', 'count' => 'posts_count'])
+            ->and($contract->listOf('simulators')['texts'])->toBe([]);
+    });
+
     test('a filter keeps its format, its several values, its dynamic values and their descriptions', function () {
         $filters = array_column((new Contract(contract()))->listOf('regions')['filters'], null, 'name');
 

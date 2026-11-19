@@ -54,6 +54,8 @@ final class Contract
             'actions' => $this->withAccess((array) ($x['actions'] ?? [])),
             // The button above the list that makes an item (its form: creationOf())
             'create' => isset($x['create']['path']) ? array_map('strval', (array) $x['create']) : null,
+            // Its texts, keys of the catalog: its title, its entry in a menu, its search, what it says without a row, its count
+            'texts' => array_map('strval', array_intersect_key($x, array_flip(['title', 'menu', 'placeholder', 'empty', 'count']))),
             'read' => $this->access('GET', $this->listPath($type)),
             // A list of the grid (/grids/{grid}/...), else of the machine (its simulators)
             'scoped' => str_starts_with($this->listPath($type), '/grids/{grid}'),

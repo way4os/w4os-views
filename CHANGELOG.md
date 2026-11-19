@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- new (lists): the texts of a list as the engine names them (`texts` of Contract::listOf(): title, menu, placeholder, empty, count)
 - fix (forms): a condition on a box met by the box as a form sends it (checked, or left out)
 - new (settings): the entry of a settings form in a menu and its message once saved (`menu`, `saved` of Contract::settingsOf())
 - new (forms): the fields the options of the grid set, shown and never changed (FormView `shown`)
