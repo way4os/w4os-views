@@ -79,7 +79,7 @@ final readonly class FormView
             $name = $field['name'];
             $before = $this->item[$name] ?? null;
             // A field of several values (the avatars of a list): a list of strings, the same in any order
-            if (! empty($field['multiple']) || is_array($posted[$name] ?? null)) {
+            if (! in_array($field['type'] ?? '', ['checkboxes', 'boolean'], true) && (! empty($field['multiple']) || is_array($posted[$name] ?? null))) {
                 $value = self::listOf($posted[$name] ?? []);
                 $sorted = $value;
                 $was = self::listOf($before ?? []);
