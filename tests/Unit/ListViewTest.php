@@ -18,8 +18,8 @@ describe('a list to show', function () {
             ->and($columns['regions'])->toMatchArray(['priority' => 2, 'primary' => false])
             ->and($columns['grid'])->toMatchArray(['priority' => 3, 'bare' => false])
             // The others in the line under the name, the ones shown first first
-            ->and(array_column(array_map(fn ($c) => (array) $c, $view->secondary), 'priority'))->toBe([2, 2, 2, 2, 3, 3, 3, 4, 4])
-            ->and(array_column(array_map(fn ($c) => (array) $c, $view->secondary), 'name'))->toBe(['regions', 'avatars', 'cpu', 'memory', 'grid', 'server', 'area', 'httpPort', 'prims']);
+            ->and(array_column(array_map(fn ($c) => (array) $c, $view->secondary), 'priority'))->toBe([2, 2, 2, 2, 3, 3, 3])
+            ->and(array_column(array_map(fn ($c) => (array) $c, $view->secondary), 'name'))->toBe(['regions', 'usage', 'cpu', 'memory', 'grid', 'server', 'area']);
 
         // A column the contract gives no priority: the first and an indicators column at every width, the others next
         $plain = ListView::of(['columns' => [['name' => 'name', 'type' => 'text'], ['name' => 'email', 'type' => 'email'], ['name' => 'status', 'type' => 'indicators', 'indicators' => []]]], [], [], []);
@@ -104,7 +104,7 @@ describe('a list to show', function () {
         $list = (new Contract(contract()))->listOf('simulators');
         $view = ListView::of($list, [$solo], [], ['grid' => 'other'], fixed: ['grid' => 'demo']);
 
-        expect(array_map(fn ($c) => $c->name, $view->columns))->toBe(['name', 'server', 'httpPort', 'regions', 'area', 'avatars', 'prims', 'cpu', 'memory', 'status'])
+        expect(array_map(fn ($c) => $c->name, $view->columns))->toBe(['name', 'server', 'regions', 'area', 'usage', 'cpu', 'memory', 'status'])
             ->and(array_column($view->list['filters'], 'name'))->not->toContain('grid')
             ->and($view->activeFilters)->toBe(0)
             ->and(array_map(fn ($c) => $c->name, ListView::of($list, [$solo], [], [])->columns))->toContain('grid');
