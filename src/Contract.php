@@ -17,11 +17,12 @@ final class Contract
     /**
      * The list of a type of the engine (avatars, regions...), null when the engine has no list of it. Its `x-list` as the engine
      * gives it, completed from the parameters of the operation when it has none: the filters with values (their enums), the sorts
-     * (the enum of `sort`), the search (a `search` parameter); the filters shown as views above it (`views`, in their order).
+     * (the enum of `sort`), the search (a `search` parameter); the filters shown as views above it (`views`, in their order); the
+     * button above it that makes an item (`create`: its label, method, path and operation, the form creationOf()).
      *
      * @return ?array{type: string, columns: list<array<string,mixed>>, sort: array{default: string, values: list<string>,
      *     descending: string}, search: ?list<string>, filters: list<array<string,mixed>>, views: list<string>,
-     *     actions: list<array<string,mixed>>, pageSize: ?int}
+     *     actions: list<array<string,mixed>>, create: ?array<string,string>, pageSize: ?int}
      */
     public function listOf(string $type): ?array
     {
@@ -51,6 +52,8 @@ final class Contract
             // The filters shown as the links above the list, in their order (the ones it has)
             'views' => array_values(array_intersect(array_map('strval', (array) ($x['views'] ?? [])), array_column($filters, 'name'))),
             'actions' => $this->withAccess((array) ($x['actions'] ?? [])),
+            // The button above the list that makes an item (its form: creationOf())
+            'create' => isset($x['create']['path']) ? array_map('strval', (array) $x['create']) : null,
             'read' => $this->access('GET', $this->listPath($type)),
             // A list of the grid (/grids/{grid}/...), else of the machine (its simulators)
             'scoped' => str_starts_with($this->listPath($type), '/grids/{grid}'),
@@ -95,6 +98,44 @@ final class Contract
             'actions' => $this->withAccess((array) ($x['actions'] ?? [])),
             'read' => $this->access('GET', $path),
             'change' => $change,
+            'scoped' => str_starts_with($path, '/grids/{grid}'),
+        ];
+    }
+
+    /**
+     * The form that makes an item of a type (avatars...), as the `x-form` of the operation of the button of its list (`create`)
+     * describes it: its title and the key of its button, the keys of the points of its help, its fields in their order as the ones of
+     * an item (each changed from the level of the operation), the method and the path that make it, and who may (`make`). Null when
+     * the list has no such button, or its operation no form.
+     *
+     * @return ?array{type: string, title: string, submit: string, description: list<string>, fields: list<array<string,mixed>>, method: string, path: string, make: array<string,mixed>, scoped: bool}
+     */
+    public function creationOf(string $type): ?array
+    {
+        $create = $this->listOf($type)['create'] ?? null;
+        $method = strtolower((string) ($create['method'] ?? ''));
+        $path = (string) ($create['path'] ?? '');
+        $x = $create === null ? null : ($this->document['paths'][$path][$method]['x-form'] ?? null);
+        if (! is_array($x)) {
+            return null;
+        }
+        $make = $this->access(strtoupper($method), $path);
+        $fields = array_values(array_map(function ($field) use ($make) {
+            $field += ['label' => 'field_'.$field['name'], 'type' => 'text', 'group' => ''] + $this->valuesOf($field);
+            isset($field['access']['level']) || $field['access']['level'] = $make['level'];
+
+            return $field;
+        }, array_filter((array) ($x['fields'] ?? []), fn ($field) => isset($field['name']))));
+
+        return [
+            'type' => $type,
+            'title' => (string) ($x['title'] ?? 'action_new'),
+            'submit' => (string) ($x['submit'] ?? 'action_save'),
+            'description' => array_values(array_map('strval', (array) ($x['description'] ?? []))),
+            'fields' => $fields,
+            'method' => strtoupper($method),
+            'path' => $path,
+            'make' => $make,
             'scoped' => str_starts_with($path, '/grids/{grid}'),
         ];
     }
