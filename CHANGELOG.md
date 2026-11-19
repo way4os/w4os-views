@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- fix (forms): a condition on a box met by the box as a form sends it (checked, or left out)
 - new (settings): the entry of a settings form in a menu and its message once saved (`menu`, `saved` of Contract::settingsOf())
 - new (forms): the fields the options of the grid set, shown and never changed (FormView `shown`)
 - new (forms): a database field as its parts, its password kept unless one is typed (`connection-string`)

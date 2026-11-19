@@ -43,3 +43,13 @@ describe('the conditions of a form', function () {
             ->and(array_column(FormView::of($form, ['kind' => 'local'], null, true, 200)->fields, 'name'))->toBe(['note']);
     });
 });
+
+test('a condition on a box is met by the box as a form sends it: checked, or left out', function () {
+    $field = ['name' => 'path', 'condition' => ['provide' => [true]]];
+    $off = ['name' => 'url', 'condition' => ['provide' => [false]]];
+
+    expect([W4OS\Views\FormView::met($field, ['provide' => '1']), W4OS\Views\FormView::met($field, ['provide' => true]), W4OS\Views\FormView::met($field, ['provide' => '0']), W4OS\Views\FormView::met($field, [])])
+        ->toBe([true, true, false, false])
+        ->and([W4OS\Views\FormView::met($off, ['provide' => '0']), W4OS\Views\FormView::met($off, []), W4OS\Views\FormView::met($off, ['provide' => 'on'])])
+        ->toBe([true, true, false]);
+});

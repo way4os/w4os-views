@@ -204,7 +204,9 @@ final readonly class FormView
             $value = $values[$attribute] ?? null;
             // A value of several (a list) meets it with one of them
             $value = is_array($value) ? (array_values(array_intersect(array_map('strval', array_filter($value, 'is_scalar')), array_map('strval', (array) $expected)))[0] ?? null) : $value;
-            if (array_filter((array) $expected, fn ($one) => is_bool($one) ? $value === $one : $value !== null && (string) $value === (string) $one) === []) {
+            // A box: checked as a form sends it ('1', 'on', 'true'), else unchecked, left out included
+            $checked = $value === true || in_array(is_scalar($value) ? strtolower((string) $value) : '', ['1', 'on', 'true'], true);
+            if (array_filter((array) $expected, fn ($one) => is_bool($one) ? $checked === $one : $value !== null && (string) $value === (string) $one) === []) {
                 return false;
             }
         }
