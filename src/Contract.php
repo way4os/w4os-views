@@ -99,10 +99,11 @@ final class Contract
 
     /**
      * A form of settings of a grid (`/grids/{grid}/settings/{group}`, read with GET, changed with PATCH), as its `x-form` describes
-     * it: its title and the key of its button, its fields as the ones of an item (values, conditions, who changes each), who reads
-     * and who changes it. Null when the engine describes none.
+     * it: its title and the key of its button, the keys of the points of its help (`description`), the list of what it picks
+     * (`preview`: its label, what it says when empty, its path, the fields given as its filters), its fields as the ones of an item
+     * (values, conditions, who changes each), who reads and who changes it. Null when the engine describes none.
      *
-     * @return ?array{group: string, title: string, submit: string, fields: list<array<string,mixed>>, read: array<string,mixed>, change: ?array<string,mixed>, scoped: bool}
+     * @return ?array{group: string, title: string, submit: string, description: list<string>, preview: ?array{label: string, empty: string, path: string, filters: list<string>}, fields: list<array<string,mixed>>, read: array<string,mixed>, change: ?array<string,mixed>, scoped: bool}
      */
     public function settingsOf(string $group): ?array
     {
@@ -129,6 +130,8 @@ final class Contract
             'group' => $group,
             'title' => (string) ($x['title'] ?? 'settings_'.$group),
             'submit' => (string) ($x['submit'] ?? 'action_save'),
+            'description' => array_values(array_map('strval', (array) ($x['description'] ?? []))),
+            'preview' => isset($x['preview']['path']) ? (array) $x['preview'] + ['label' => '', 'empty' => '', 'filters' => []] : null,
             'fields' => $fields,
             'read' => $this->access('GET', $path),
             'change' => $change,

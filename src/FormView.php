@@ -49,7 +49,10 @@ final readonly class FormView
             $fields = array_values(array_filter($form['fields'], fn ($field) => ($field['group'] ?? null) === $group['name'] && self::visible($field, $item, $roles)));
             $fields === [] || $groups[] = $group + ['fields' => $fields];
         }
-        $changed = array_values(array_filter($form['fields'], fn ($field) => self::visible($field, $item, $roles) && self::editable($field, $roles, $level)));
+        // A field whose condition is on the fields the viewer changes is in the form whatever their values now: what is chosen shows it
+        $editable = array_column(array_filter($form['fields'], fn ($field) => self::editable($field, $roles, $level)), 'name');
+        $changed = array_values(array_filter($form['fields'], fn ($field) => self::editable($field, $roles, $level)
+            && (self::visible($field, $item, $roles) || (self::live($field, $editable) && self::visible(['condition' => []] + $field, $item, $roles)))));
         $values = ['id' => Rows::id($item)];
         foreach ($form['fields'] as $field) {
             if (self::editable($field, $roles, $level) && ($field['type'] ?? '') !== 'secret' && empty($field['writeOnly'])) {
@@ -67,7 +70,7 @@ final readonly class FormView
 
     /**
      * What a posted form changes: the fields the viewer changes whose value is not the item's (a password only when one is typed, a
-     * box left unchecked when the engine does not know the value).
+     * box left unchecked when the engine does not know the value), the ones whose condition the values posted do not meet left out.
      *
      * @param array<string,mixed> $posted the data posted
      * @return array<string,mixed>
@@ -75,8 +78,13 @@ final readonly class FormView
     public function changes(array $posted): array
     {
         $changes = [];
+        // The conditions met by the values posted, the item's for what is not posted
+        $values = array_intersect_key($posted, array_flip(array_column($this->fields, 'name'))) + $this->item;
         foreach ($this->fields as $field) {
             $name = $field['name'];
+            if (! self::met($field, $values)) {
+                continue;
+            }
             $before = $this->item[$name] ?? null;
             // A field of several values (the avatars of a list): a list of strings, the same in any order
             if (! in_array($field['type'] ?? '', ['checkboxes', 'boolean'], true) && (! empty($field['multiple']) || is_array($posted[$name] ?? null))) {
@@ -143,15 +151,41 @@ final readonly class FormView
      */
     public static function visible(array $field, array $item, array $roles): bool
     {
-        foreach ((array) ($field['condition'] ?? []) as $attribute => $values) {
-            $value = $item[$attribute] ?? null;
-            $met = array_filter((array) $values, fn ($expected) => is_bool($expected) ? $value === $expected : $value !== null && (string) $value === (string) $expected);
-            if ($met === []) {
+        return self::met($field, $item) && (! isset($field['access']['view']) || array_intersect((array) $field['access']['view'], $roles) !== []);
+    }
+
+    /**
+     * Whether the condition of a field is met by values (an item's, or a form's): each attribute has one of its values.
+     *
+     * @param array<string,mixed> $field
+     * @param array<string,mixed> $values
+     */
+    public static function met(array $field, array $values): bool
+    {
+        foreach ((array) ($field['condition'] ?? []) as $attribute => $expected) {
+            $value = $values[$attribute] ?? null;
+            // A value of several (a list) meets it with one of them
+            $value = is_array($value) ? (array_values(array_intersect(array_map('strval', array_filter($value, 'is_scalar')), array_map('strval', (array) $expected)))[0] ?? null) : $value;
+            if (array_filter((array) $expected, fn ($one) => is_bool($one) ? $value === $one : $value !== null && (string) $value === (string) $one) === []) {
                 return false;
             }
         }
 
-        return ! isset($field['access']['view']) || array_intersect((array) $field['access']['view'], $roles) !== [];
+        return true;
+    }
+
+    /**
+     * Whether the condition of a field is on fields of the form alone (the ones the viewer changes): a site shows or hides it as
+     * they are changed.
+     *
+     * @param array<string,mixed> $field
+     * @param list<string> $names the fields the viewer changes
+     */
+    public static function live(array $field, array $names): bool
+    {
+        $on = array_keys((array) ($field['condition'] ?? []));
+
+        return $on !== [] && array_diff($on, $names) === [];
     }
 
     /**
