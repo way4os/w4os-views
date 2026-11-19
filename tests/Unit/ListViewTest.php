@@ -104,6 +104,14 @@ describe('a list to show', function () {
             ->and(array_map(fn ($c) => $c->name, ListView::of($list, [$solo], [], [])->columns))->toContain('grid');
     });
 
+    test('a column that repeats a fixed filter (mirrors) hidden too: the region of the parcels of a region', function () {
+        $list = ['columns' => [['name' => 'name'], ['name' => 'regionName', 'mirrors' => 'region'], ['name' => 'ownerName', 'mirrors' => 'owner']], 'filters' => [['name' => 'region'], ['name' => 'owner']]];
+        $rows = [['uuid' => 'p', 'name' => 'Beach', 'regionName' => 'Welcome', 'ownerName' => 'Ada Love']];
+
+        expect(array_map(fn ($c) => $c->name, ListView::of($list, $rows, [], [], fixed: ['region' => 'r-uuid'])->columns))->toBe(['name', 'ownerName'])
+            ->and(array_map(fn ($c) => $c->name, ListView::of($list, $rows, [], [])->columns))->toBe(['name', 'regionName', 'ownerName']);
+    });
+
     test('its pages from the meta of the engine', function () {
         $view = ListView::of((new Contract(contract()))->listOf('avatars'), [], ['total' => 120, 'page' => 2, 'perPage' => 50], []);
 
