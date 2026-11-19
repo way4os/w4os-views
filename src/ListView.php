@@ -74,23 +74,28 @@ final readonly class ListView
             count(array_filter($filters, fn (FilterView $filter) => $filter->active)),
             array_diff_key($query, array_flip([...$names, 'page'])),
             $query,
-            self::views($filters, $query, $total),
+            self::views($filters, (array) ($list['views'] ?? []), $query, $total),
         );
     }
 
     /**
-     * The views of a list, as w4os-wp shows them above its table: All, then each value of the filters the contract marks as views
-     * (`view`) that gives rows or that the page asks, with the number of rows it gives; each the query of the page with that value
-     * alone of these filters (the search and the other filters kept), the one the page asks current. All counts the rows of every
-     * value of the filter asked (the engine counts a filter without its own value), the total when none is.
+     * The views of a list, as w4os-wp shows them above its table: All, then each value of the filters the contract shows as views
+     * (`views`, in their order) that gives rows or that the page asks, with the number of rows it gives; each the query of the page
+     * with that value alone of these filters (the search and the other filters kept), the one the page asks current. All counts the
+     * rows of every value of the filter asked (the engine counts a filter without its own value), the total when none is.
      *
      * @param list<FilterView> $filters
+     * @param list<string> $names the filters shown as views, in their order
      * @param array<string,mixed> $query
      * @return list<array{filter: ?string, value: ?string, label: ?string, text: ?string, count: ?int, query: array<string,mixed>, current: bool}>
      */
-    private static function views(array $filters, array $query, int $total): array
+    private static function views(array $filters, array $names, array $query, int $total): array
     {
-        $marked = array_values(array_filter($filters, fn (FilterView $filter) => ! empty($filter->definition['view'])));
+        $byName = [];
+        foreach ($filters as $filter) {
+            $byName[$filter->name] = $filter;
+        }
+        $marked = array_values(array_filter(array_map(fn ($name) => $byName[$name] ?? null, $names)));
         if ($marked === []) {
             return [];
         }

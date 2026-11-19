@@ -17,11 +17,11 @@ final class Contract
     /**
      * The list of a type of the engine (avatars, regions...), null when the engine has no list of it. Its `x-list` as the engine
      * gives it, completed from the parameters of the operation when it has none: the filters with values (their enums), the sorts
-     * (the enum of `sort`), the search (a `search` parameter).
+     * (the enum of `sort`), the search (a `search` parameter); the filters shown as views above it (`views`, in their order).
      *
      * @return ?array{type: string, columns: list<array<string,mixed>>, sort: array{default: string, values: list<string>,
-     *     descending: string}, search: ?list<string>, filters: list<array<string,mixed>>, actions: list<array<string,mixed>>,
-     *     pageSize: ?int}
+     *     descending: string}, search: ?list<string>, filters: list<array<string,mixed>>, views: list<string>,
+     *     actions: list<array<string,mixed>>, pageSize: ?int}
      */
     public function listOf(string $type): ?array
     {
@@ -47,7 +47,9 @@ final class Contract
             'columns' => $columns,
             'sort' => ['default' => (string) $sort['default'], 'values' => array_values(array_map('strval', (array) $sort['values'])), 'descending' => (string) $sort['descending']],
             'search' => isset($parameters['search']) ? array_values((array) ($x['search'] ?? [])) : null,
-            'filters' => isset($x['filters']) ? $this->filtersOf((array) $x['filters']) : $this->filters($parameters),
+            'filters' => $filters = isset($x['filters']) ? $this->filtersOf((array) $x['filters']) : $this->filters($parameters),
+            // The filters shown as the links above the list, in their order (the ones it has)
+            'views' => array_values(array_intersect(array_map('strval', (array) ($x['views'] ?? [])), array_column($filters, 'name'))),
             'actions' => $this->withAccess((array) ($x['actions'] ?? [])),
             'read' => $this->access('GET', $this->listPath($type)),
             // A list of the grid (/grids/{grid}/...), else of the machine (its simulators)
@@ -185,8 +187,7 @@ final class Contract
             $all[] = ['name' => (string) $filter['name'], 'label' => (string) ($filter['label'] ?? 'filter_'.$filter['name']), 'values' => $values]
                 + (isset($filter['format']) ? ['format' => (string) $filter['format']] : [])
                 + (! empty($filter['multiple']) ? ['multiple' => true] : [])
-                + (! empty($filter['dynamic']) ? ['dynamic' => true] : [])
-                + (! empty($filter['view']) ? ['view' => true] : []);
+                + (! empty($filter['dynamic']) ? ['dynamic' => true] : []);
         }
 
         return $all;
