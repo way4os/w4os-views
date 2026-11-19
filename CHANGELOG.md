@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- new (forms): the fields the options of the grid set, shown and never changed (FormView `shown`)
+- new (forms): a database field as its parts, its password kept unless one is typed (`connection-string`)
 - new (access): who may change the settings of the site, as the contract says it (`Contract::siteAccess()`, `x-site`), the engine's rule without it
 - new (posts): the stream of an avatar for the avatar itself (PostsView, Contract::postsOf()): the fields that write a post as the engine describes them, the actions of its posts, the requests that do them; nobody else gets one
 - new (items): the form of an item (FormView): the roles of the viewer, its groups with the fields it sees, the fields it changes with their value, the ones it may not, and what a posted form changes

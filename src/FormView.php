@@ -18,6 +18,7 @@ final readonly class FormView
      * @param array<string,mixed> $values the id of the item and the values of the fields the viewer changes
      * @param array<string,mixed> $form the description of the item
      * @param array<string,mixed> $item
+     * @param list<array<string,mixed>> $shown the fields the viewer sees and no one changes here (`readOnly`: what the options of the grid set)
      */
     public function __construct(
         public array $roles,
@@ -29,6 +30,7 @@ final readonly class FormView
         public array $form,
         public array $item,
         public int $level,
+        public array $shown = [],
     ) {}
 
     /**
@@ -60,12 +62,15 @@ final readonly class FormView
                 $values[$field['name']] = match ($field['type'] ?? '') {
                     'boolean' => (bool) $value,
                     'checkboxes' => self::checked($value ?? []),
+                    'connection-string' => self::parts($field, $value),
                     default => $value === null ? '' : $value,
                 };
             }
         }
 
-        return new self($roles, $groups, $changed, self::locked($form, $roles, $level), $changed !== [], $values, $form, $item, $level);
+        $shown = array_values(array_filter($form['fields'], fn ($field) => ! empty($field['readOnly']) && self::visible($field, $item, $roles)));
+
+        return new self($roles, $groups, $changed, self::locked($form, $roles, $level), $changed !== [], $values, $form, $item, $level, $shown);
     }
 
     /**
@@ -86,6 +91,12 @@ final readonly class FormView
                 continue;
             }
             $before = $this->item[$name] ?? null;
+            // A database: its parts, its password only when one is typed
+            if (($field['type'] ?? '') === 'connection-string') {
+                $value = self::parts($field, (array) ($posted[$name] ?? []), true);
+                $value === self::parts($field, $before) && ! isset($value['password']) || $changes[$name] = $value;
+                continue;
+            }
             // A field of several values (the avatars of a list): a list of strings, the same in any order
             if (! in_array($field['type'] ?? '', ['checkboxes', 'boolean'], true) && (! empty($field['multiple']) || is_array($posted[$name] ?? null))) {
                 $value = self::listOf($posted[$name] ?? []);
@@ -112,6 +123,33 @@ final readonly class FormView
         }
 
         return $changes;
+    }
+
+    /**
+     * The parts of a database (a field `connection-string`, its `fields`) as a form has them: each as its type, its password left
+     * out, or the one typed when it is asked (`$typed`) and one is.
+     *
+     * @param array<string,mixed> $field
+     * @return array<string,mixed>
+     */
+    private static function parts(array $field, mixed $value, bool $typed = false): array
+    {
+        $value = is_array($value) ? $value : [];
+        $parts = [];
+        foreach ((array) ($field['fields'] ?? []) as $part) {
+            $name = (string) ($part['name'] ?? '');
+            $given = $value[$name] ?? null;
+            if (($part['type'] ?? '') === 'secret') {
+                $typed && trim((string) $given) !== '' && $parts[$name] = trim((string) $given);
+                continue;
+            }
+            $parts[$name] = match ($part['type'] ?? '') {
+                'integer' => $given === null || $given === '' ? null : (int) $given,
+                default => trim((string) ($given ?? '')),
+            };
+        }
+
+        return $parts;
     }
 
     /**
