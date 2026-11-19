@@ -6,7 +6,7 @@ describe('a list of the contract', function () {
     test('read from its list operation and its x-list', function () {
         $list = (new Contract(contract()))->listOf('avatars');
 
-        expect(array_column($list['columns'], 'name'))->toBe(['name', 'email', 'role', 'type', 'created', 'lastSeen', 'status'])
+        expect(array_column($list['columns'], 'name'))->toBe(['name', 'email', 'shownRole', 'type', 'created', 'lastSeen', 'estates', 'regions', 'parcels', 'status'])
             ->and($list['columns'][0])->toMatchArray(['label' => 'avatar_name', 'type' => 'text', 'sort' => 'name', 'picture' => 'profileImage'])
             ->and($list['sort'])->toMatchArray(['default' => '-created', 'descending' => '-'])
             ->and($list['sort']['values'])->toContain('level')

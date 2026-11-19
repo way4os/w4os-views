@@ -29,14 +29,22 @@ describe('a form of settings of a grid', function () {
     });
 });
 
+/** The settings of the offline messages, their module set by the options of the grid (shown, never changed here). */
+function readonly_module(array $form): array
+{
+    $form['fields'] = array_map(fn (array $field) => $field['name'] === 'offlineModule' ? ['readOnly' => true] + $field : $field, $form['fields']);
+
+    return $form;
+}
+
 describe('a form of the settings of a service', function () {
     test('shows what the options of the grid set, never changes it', function () {
-        $form = (new Contract(contract()))->settingsOf('offline');
+        $form = readonly_module((new Contract(contract()))->settingsOf('offline'));
         $view = W4OS\Views\FormView::of($form, ['provide' => true, 'offlineModule' => 'OfflineMessageModule', 'path' => '/helpers/offline', 'mailSender' => 'a@example.org'], null, true, 250);
 
         expect(array_column($view->shown, 'name'))->toBe(['offlineModule'])
             ->and(array_column($view->fields, 'name'))->toContain('provide', 'mailSender')->not->toContain('offlineModule')
-            ->and($view->changes(['provide' => '1', 'path' => '/helpers/offline', 'offlineModule' => 'Offline Message Module V2', 'mailSender' => 'b@example.org']))->toBe(['mailSender' => 'b@example.org']);
+            ->and($view->changes(['provide' => '1', 'path' => '/helpers/offline', 'offlineModule' => 'Offline Message Module V2', 'mailSender' => 'b@example.org', 'offlineDatabase' => ['useDefault' => '1']]))->toBe(['mailSender' => 'b@example.org']);
     });
 
     test('a database as its parts, its password never shown, kept unless one is typed', function () {
@@ -68,7 +76,7 @@ describe('a form of the settings of a service', function () {
     });
 
     test('what the options set is in the form whatever Provide is now, so that checking it shows it', function () {
-        $form = (new Contract(contract()))->settingsOf('offline');
+        $form = readonly_module((new Contract(contract()))->settingsOf('offline'));
         $off = W4OS\Views\FormView::of($form, ['provide' => false, 'offlineModule' => 'OfflineMessageModule'], null, true, 250);
 
         expect(array_column($off->shown, 'name'))->toBe(['offlineModule']);
