@@ -67,7 +67,7 @@ final readonly class ListView
         return new self(
             $list,
             $columns,
-            array_values(array_filter($columns, fn (ColumnView $column) => ! $column->primary)),
+            self::folded($columns),
             array_map(fn (array $item) => self::row($list, $item, $links, $self, $level), $items),
             $filters,
             $total,
@@ -120,8 +120,23 @@ final readonly class ListView
     }
 
     /**
-     * A column: at every width when it is the first or an indicators column (until the contract says it, `priority`), its sort
-     * state from the query of the page (its `sort`, the default of the list without it).
+     * The columns hidden on a narrow screen, their values under the name: the ones shown first (the lowest priority) first, in
+     * their order.
+     *
+     * @param list<ColumnView> $columns
+     * @return list<ColumnView>
+     */
+    private static function folded(array $columns): array
+    {
+        $folded = array_values(array_filter($columns, fn (ColumnView $column) => ! $column->primary));
+        usort($folded, fn (ColumnView $a, ColumnView $b) => $a->priority <=> $b->priority);
+
+        return $folded;
+    }
+
+    /**
+     * A column: its priority as the contract gives it, else 1 for the first and an indicators column and 2 for the others; its
+     * sort state from the query of the page (its `sort`, the default of the list without it).
      *
      * @param array<string,mixed> $column
      * @param array{default: string, descending: string} $sort
@@ -140,7 +155,8 @@ final readonly class ListView
             (string) $column['name'],
             (string) ($column['label'] ?? 'column_'.$column['name']),
             $type,
-            isset($column['priority']) ? $column['priority'] === 'primary' : $first || $type === 'indicators',
+            $priority = max(1, (int) ($column['priority'] ?? ($first || $type === 'indicators' ? 1 : 2))),
+            $priority === 1,
             (bool) ($column['bare'] ?? in_array($type, self::BARE, true)),
             $key,
             $sorted,

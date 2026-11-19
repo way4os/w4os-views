@@ -9,19 +9,25 @@ describe('a list to show', function () {
     $solo = ['id' => 'h:9040', 'name' => 'Test Solo', 'slug' => 'demo.solo', 'grid' => 'demo', 'uri' => 'h:9040', 'httpPort' => 9040, 'enabled' => true, 'running' => true, 'state' => 'running',
         'connections' => ['console' => 'ok', 'screen' => 'failed', 'config' => 'configured', 'regions' => 'none']];
 
-    test('its columns: the first and the indicators at every width, the others secondary; bare or after their label', function () use ($solo) {
+    test('its columns: each its priority as the contract gives it, 1 at every width, a higher number hidden first; bare or after their label', function () use ($solo) {
         $view = ListView::of((new Contract(contract()))->listOf('simulators'), [$solo], ['total' => 1], []);
         $columns = array_column(array_map(fn ($c) => (array) $c, $view->columns), null, 'name');
 
-        expect(array_keys($columns))->toBe(['name', 'grid', 'server', 'httpPort', 'regions', 'area', 'avatars', 'cpu', 'memory', 'status'])
-            ->and($columns['name']['primary'])->toBeTrue()->and($columns['status']['primary'])->toBeTrue()
-            ->and($columns['grid']['primary'])->toBeFalse()
-            ->and($columns['grid']['bare'])->toBeFalse()
-            ->and(array_column(array_map(fn ($c) => (array) $c, $view->secondary), 'name'))->toBe(['grid', 'server', 'httpPort', 'regions', 'area', 'avatars', 'cpu', 'memory']);
+        expect($columns['name'])->toMatchArray(['priority' => 1, 'primary' => true])
+            ->and($columns['status'])->toMatchArray(['priority' => 1, 'primary' => true])
+            ->and($columns['regions'])->toMatchArray(['priority' => 2, 'primary' => false])
+            ->and($columns['grid'])->toMatchArray(['priority' => 3, 'bare' => false])
+            // The others in the line under the name, the ones shown first first
+            ->and(array_column(array_map(fn ($c) => (array) $c, $view->secondary), 'priority'))->toBe([2, 2, 2, 2, 3, 3, 3, 4, 4])
+            ->and(array_column(array_map(fn ($c) => (array) $c, $view->secondary), 'name'))->toBe(['regions', 'avatars', 'cpu', 'memory', 'grid', 'server', 'area', 'httpPort', 'prims']);
+
+        // A column the contract gives no priority: the first and an indicators column at every width, the others next
+        $plain = ListView::of(['columns' => [['name' => 'name', 'type' => 'text'], ['name' => 'email', 'type' => 'email'], ['name' => 'status', 'type' => 'indicators', 'indicators' => []]]], [], [], []);
+        expect(array_column(array_map(fn ($c) => (array) $c, $plain->columns), 'priority', 'name'))->toBe(['name' => 1, 'email' => 2, 'status' => 1]);
 
         $avatars = ListView::of((new Contract(contract()))->listOf('avatars'), [], ['total' => 0], []);
         $bare = array_column(array_map(fn ($c) => (array) $c, $avatars->columns), 'bare', 'name');
-        expect($bare)->toMatchArray(['email' => true, 'role' => true, 'created' => false, 'lastSeen' => false]);
+        expect($bare)->toMatchArray(['email' => true, 'shownRole' => true, 'created' => false, 'lastSeen' => false]);
     });
 
     test('a column sorts by its sort, the other way once sorted, its state told', function () {
@@ -98,7 +104,7 @@ describe('a list to show', function () {
         $list = (new Contract(contract()))->listOf('simulators');
         $view = ListView::of($list, [$solo], [], ['grid' => 'other'], fixed: ['grid' => 'demo']);
 
-        expect(array_map(fn ($c) => $c->name, $view->columns))->toBe(['name', 'server', 'httpPort', 'regions', 'area', 'avatars', 'cpu', 'memory', 'status'])
+        expect(array_map(fn ($c) => $c->name, $view->columns))->toBe(['name', 'server', 'httpPort', 'regions', 'area', 'avatars', 'prims', 'cpu', 'memory', 'status'])
             ->and(array_column($view->list['filters'], 'name'))->not->toContain('grid')
             ->and($view->activeFilters)->toBe(0)
             ->and(array_map(fn ($c) => $c->name, ListView::of($list, [$solo], [], [])->columns))->toContain('grid');
