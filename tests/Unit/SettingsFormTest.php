@@ -32,23 +32,24 @@ describe('a form of settings of a grid', function () {
 describe('a form of the settings of a service', function () {
     test('shows what the options of the grid set, never changes it', function () {
         $form = (new Contract(contract()))->settingsOf('offline');
-        $view = W4OS\Views\FormView::of($form, ['offlineModule' => 'OfflineMessageModule', 'offlineMessageUrl' => 'https://play.example.org/helpers/offline', 'mailSender' => 'a@example.org'], null, true, 250);
+        $view = W4OS\Views\FormView::of($form, ['provide' => true, 'offlineModule' => 'OfflineMessageModule', 'path' => '/helpers/offline', 'mailSender' => 'a@example.org'], null, true, 250);
 
-        expect(array_column($view->shown, 'name'))->toBe(['offlineModule', 'offlineMessageUrl'])
-            ->and(array_column($view->fields, 'name'))->toBe(['mailSender'])
-            ->and($view->changes(['offlineModule' => 'Offline Message Module V2', 'mailSender' => 'b@example.org']))->toBe(['mailSender' => 'b@example.org']);
+        expect(array_column($view->shown, 'name'))->toBe(['offlineModule'])
+            ->and(array_column($view->fields, 'name'))->toContain('provide', 'mailSender')->not->toContain('offlineModule')
+            ->and($view->changes(['provide' => '1', 'path' => '/helpers/offline', 'offlineModule' => 'Offline Message Module V2', 'mailSender' => 'b@example.org']))->toBe(['mailSender' => 'b@example.org']);
     });
 
     test('a database as its parts, its password never shown, kept unless one is typed', function () {
         $form = (new Contract(contract()))->settingsOf('search');
-        $item = ['searchDatabase' => ['host' => 'db.example.org', 'port' => 3306, 'database' => 'search', 'user' => 'os', 'password' => '********', 'options' => []]];
+        $item = ['provide' => true, 'searchDatabase' => ['host' => 'db.example.org', 'port' => 3306, 'database' => 'search', 'user' => 'os', 'password' => '********', 'options' => []]];
         $view = W4OS\Views\FormView::of($form, $item, null, true, 250);
         $parts = ['host' => 'db.example.org', 'port' => '3306', 'database' => 'search', 'user' => 'os', 'password' => ''];
+        $sent = ['provide' => '1'];
 
         expect(array_column(array_column($form['fields'], null, 'name')['searchDatabase']['fields'], 'name'))->toBe(['host', 'port', 'database', 'user', 'password'])
             ->and($view->values['searchDatabase'])->toBe(['host' => 'db.example.org', 'port' => 3306, 'database' => 'search', 'user' => 'os'])
-            ->and($view->changes(['searchDatabase' => $parts]))->toBe([])
-            ->and($view->changes(['searchDatabase' => ['host' => 'db2.example.org'] + $parts]))->toBe(['searchDatabase' => ['host' => 'db2.example.org', 'port' => 3306, 'database' => 'search', 'user' => 'os']])
-            ->and($view->changes(['searchDatabase' => ['password' => 'new'] + $parts]))->toBe(['searchDatabase' => ['host' => 'db.example.org', 'port' => 3306, 'database' => 'search', 'user' => 'os', 'password' => 'new']]);
+            ->and($view->changes($sent + ['searchDatabase' => $parts]))->toBe([])
+            ->and($view->changes($sent + ['searchDatabase' => ['host' => 'db2.example.org'] + $parts]))->toBe(['searchDatabase' => ['host' => 'db2.example.org', 'port' => 3306, 'database' => 'search', 'user' => 'os']])
+            ->and($view->changes($sent + ['searchDatabase' => ['password' => 'new'] + $parts]))->toBe(['searchDatabase' => ['host' => 'db.example.org', 'port' => 3306, 'database' => 'search', 'user' => 'os', 'password' => 'new']]);
     });
 });
