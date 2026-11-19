@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- new (settings): the entry of a settings form in a menu and its message once saved (`menu`, `saved` of Contract::settingsOf())
 - new (forms): the fields the options of the grid set, shown and never changed (FormView `shown`)
 - new (forms): a database field as its parts, its password kept unless one is typed (`connection-string`)
 - new (access): who may change the settings of the site, as the contract says it (`Contract::siteAccess()`, `x-site`), the engine's rule without it
