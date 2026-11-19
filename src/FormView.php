@@ -62,7 +62,8 @@ final readonly class FormView
                 $values[$field['name']] = match ($field['type'] ?? '') {
                     'boolean' => (bool) $value,
                     'checkboxes' => self::checked($value ?? []),
-                    'connection-string' => self::parts($field, $value),
+                    // Its default (a database the grid has without it): no value of its own
+                    'connection-string' => self::parts($field, $value) + (isset($field['fallback']) ? ['useDefault' => $value === null] : []),
                     default => $value === null ? '' : $value,
                 };
             }
@@ -93,7 +94,16 @@ final readonly class FormView
             $before = $this->item[$name] ?? null;
             // A database: its parts, its password only when one is typed
             if (($field['type'] ?? '') === 'connection-string') {
+                // Its default chosen: no parts of its own
+                if (isset($field['fallback']) && self::met(['condition' => ['useDefault' => [true]]], (array) ($posted[$name] ?? []))) {
+                    $before === null || $changes[$name] = ['useDefault' => true];
+                    continue;
+                }
                 $value = self::parts($field, (array) ($posted[$name] ?? []), true);
+                if ($before === null && isset($field['fallback'])) {
+                    $changes[$name] = $value;
+                    continue;
+                }
                 $value === self::parts($field, $before) && ! isset($value['password']) || $changes[$name] = $value;
                 continue;
             }

@@ -47,9 +47,23 @@ describe('a form of the settings of a service', function () {
         $sent = ['provide' => '1'];
 
         expect(array_column(array_column($form['fields'], null, 'name')['searchDatabase']['fields'], 'name'))->toBe(['host', 'port', 'database', 'user', 'password'])
-            ->and($view->values['searchDatabase'])->toBe(['host' => 'db.example.org', 'port' => 3306, 'database' => 'search', 'user' => 'os'])
+            ->and($view->values['searchDatabase'])->toBe(['host' => 'db.example.org', 'port' => 3306, 'database' => 'search', 'user' => 'os', 'useDefault' => false])
             ->and($view->changes($sent + ['searchDatabase' => $parts]))->toBe([])
             ->and($view->changes($sent + ['searchDatabase' => ['host' => 'db2.example.org'] + $parts]))->toBe(['searchDatabase' => ['host' => 'db2.example.org', 'port' => 3306, 'database' => 'search', 'user' => 'os']])
             ->and($view->changes($sent + ['searchDatabase' => ['password' => 'new'] + $parts]))->toBe(['searchDatabase' => ['host' => 'db.example.org', 'port' => 3306, 'database' => 'search', 'user' => 'os', 'password' => 'new']]);
+    });
+
+    test('a database the grid has a default for: its default kept, chosen, or left for parts of its own', function () {
+        $form = (new Contract(contract()))->settingsOf('search');
+        $default = W4OS\Views\FormView::of($form, ['provide' => true, 'searchDatabase' => null], null, true, 250);
+        $own = W4OS\Views\FormView::of($form, ['provide' => true, 'searchDatabase' => ['host' => 'db.example.org', 'port' => 3306, 'database' => 'search', 'user' => 'os', 'password' => '********']], null, true, 250);
+        $parts = ['host' => 'db.example.org', 'port' => '3306', 'database' => 'search', 'user' => 'os', 'password' => ''];
+
+        expect($default->values['searchDatabase'])->toMatchArray(['useDefault' => true, 'host' => ''])
+            ->and($own->values['searchDatabase'])->toMatchArray(['useDefault' => false, 'host' => 'db.example.org'])
+            ->and($default->changes(['provide' => '1', 'searchDatabase' => ['useDefault' => '1'] + $parts]))->toBe([])
+            ->and($default->changes(['provide' => '1', 'searchDatabase' => $parts]))->toBe(['searchDatabase' => ['host' => 'db.example.org', 'port' => 3306, 'database' => 'search', 'user' => 'os']])
+            ->and($own->changes(['provide' => '1', 'searchDatabase' => ['useDefault' => '1'] + $parts]))->toBe(['searchDatabase' => ['useDefault' => true]])
+            ->and($own->changes(['provide' => '1', 'searchDatabase' => $parts]))->toBe([]);
     });
 });
