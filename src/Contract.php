@@ -185,7 +185,8 @@ final class Contract
             $all[] = ['name' => (string) $filter['name'], 'label' => (string) ($filter['label'] ?? 'filter_'.$filter['name']), 'values' => $values]
                 + (isset($filter['format']) ? ['format' => (string) $filter['format']] : [])
                 + (! empty($filter['multiple']) ? ['multiple' => true] : [])
-                + (! empty($filter['dynamic']) ? ['dynamic' => true] : []);
+                + (! empty($filter['dynamic']) ? ['dynamic' => true] : [])
+                + (! empty($filter['view']) ? ['view' => true] : []);
         }
 
         return $all;

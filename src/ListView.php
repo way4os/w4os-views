@@ -4,7 +4,8 @@ namespace W4OS\Views;
 
 /**
  * A list of the engine to show: its columns, the ones a narrow screen shows under the name (`secondary`), its rows, its filters
- * (FilterView), its count and its pages, the filters chosen and the query that removes them.
+ * (FilterView), its count and its pages, the filters chosen and the query that removes them, its views (the values of the filters
+ * the contract marks as views, with their counts).
  */
 final readonly class ListView
 {
@@ -19,6 +20,8 @@ final readonly class ListView
      * @param list<FilterView> $filters the filters the page shows, their values and what it asks of them
      * @param array<string,mixed> $query the query of the page
      * @param array<string,mixed> $clearQuery the query without the filters chosen nor its page
+     * @param list<array{filter: ?string, value: ?string, label: ?string, text: ?string, count: ?int, query: array<string,mixed>, current: bool}> $views
+     *     the views of the list (views())
      */
     public function __construct(
         public array $list,
@@ -32,6 +35,7 @@ final readonly class ListView
         public int $activeFilters,
         public array $clearQuery,
         public array $query,
+        public array $views = [],
     ) {}
 
     /**
@@ -70,7 +74,42 @@ final readonly class ListView
             count(array_filter($filters, fn (FilterView $filter) => $filter->active)),
             array_diff_key($query, array_flip([...$names, 'page'])),
             $query,
+            self::views($filters, $query, $total),
         );
+    }
+
+    /**
+     * The views of a list, as w4os-wp shows them above its table: All, then each value of the filters the contract marks as views
+     * (`view`) that gives rows or that the page asks, with the number of rows it gives; each the query of the page with that value
+     * alone of these filters (the search and the other filters kept), the one the page asks current. All counts the rows of every
+     * value of the filter asked (the engine counts a filter without its own value), the total when none is.
+     *
+     * @param list<FilterView> $filters
+     * @param array<string,mixed> $query
+     * @return list<array{filter: ?string, value: ?string, label: ?string, text: ?string, count: ?int, query: array<string,mixed>, current: bool}>
+     */
+    private static function views(array $filters, array $query, int $total): array
+    {
+        $marked = array_values(array_filter($filters, fn (FilterView $filter) => ! empty($filter->definition['view'])));
+        if ($marked === []) {
+            return [];
+        }
+        $base = array_diff_key($query, array_flip([...array_map(fn (FilterView $filter) => $filter->name, $marked), 'page']));
+        $asked = array_values(array_filter($marked, fn (FilterView $filter) => $filter->active));
+        $counts = $asked === [] ? [] : array_column($asked[0]->values, 'count');
+        $all = $asked === [] ? $total : (in_array(null, $counts, true) ? null : array_sum($counts));
+        $views = [['filter' => null, 'value' => null, 'label' => null, 'text' => null, 'count' => $all, 'query' => $base, 'current' => $asked === []]];
+        foreach ($marked as $filter) {
+            foreach ($filter->values as $value) {
+                if ($value['count'] === 0 && ! $value['chosen']) {
+                    continue;
+                }
+                $views[] = ['filter' => $filter->name, 'value' => $value['value'], 'label' => $value['label'], 'text' => $value['text'], 'count' => $value['count'],
+                    'query' => $base + [$filter->name => $value['value']], 'current' => $value['chosen'] && count($asked) === 1];
+            }
+        }
+
+        return $views;
     }
 
     /**
