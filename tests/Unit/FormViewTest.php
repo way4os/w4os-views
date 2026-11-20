@@ -66,6 +66,20 @@ describe('the form of an item', function () {
             ->and($view->changes(['registers' => ['https://a.example.org', '', 'https://b.example.org']]))->toBe([]);
     });
 
+    test('an address with a default the grid takes without it: Use default while it has none, its value under it, its default chosen removes it', function () {
+        $form = ['fields' => [['name' => 'assetServerUri', 'type' => 'url', 'fallback' => 'db_use_default', 'label' => 'uri', 'access' => ['level' => 200]]]];
+        $default = FormView::of($form, ['assetServerUri' => null], null, true, 250);
+        $own = FormView::of($form, ['assetServerUri' => 'http://assets.example.org:8003'], null, true, 250);
+
+        expect($default->values['assetServerUri'])->toBe(['useDefault' => true, 'value' => ''])
+            ->and($own->values['assetServerUri'])->toBe(['useDefault' => false, 'value' => 'http://assets.example.org:8003'])
+            ->and($default->changes(['assetServerUri' => ['useDefault' => '1', 'value' => '']]))->toBe([])
+            ->and($default->changes(['assetServerUri' => ['value' => ' http://a.example.org:8003 ']]))->toBe(['assetServerUri' => 'http://a.example.org:8003'])
+            ->and($default->changes(['assetServerUri' => ['value' => '']]))->toBe([])
+            ->and($own->changes(['assetServerUri' => ['useDefault' => '1', 'value' => 'http://assets.example.org:8003']]))->toBe(['assetServerUri' => ['useDefault' => true]])
+            ->and($own->changes(['assetServerUri' => ['value' => 'http://assets.example.org:8003']]))->toBe([]);
+    });
+
     test('the names of the choices a form posts: unique, sorted, none empty', function () {
         expect(FormView::checked(['b', 'a', '', 'b']))->toBe(['a', 'b'])->and(FormView::checked(null))->toBe([]);
     });

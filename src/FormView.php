@@ -70,7 +70,8 @@ final readonly class FormView
                     'checkboxes' => self::checked($value ?? []),
                     // Its default (a database the grid has without it): no value of its own
                     'connection-string' => self::parts($field, $value) + (isset($field['fallback']) ? ['useDefault' => $value === null] : []),
-                    default => $value === null ? '' : $value,
+                    // Another field with a default the grid takes without it (an address): its value under it
+                    default => isset($field['fallback']) ? ['useDefault' => $value === null, 'value' => (string) ($value ?? '')] : ($value === null ? '' : $value),
                 };
             }
         }
@@ -113,6 +114,17 @@ final readonly class FormView
                     continue;
                 }
                 $value === self::parts($field, $before) && ! isset($value['password']) || $changes[$name] = $value;
+                continue;
+            }
+            // Another field with a default (an address): its default chosen, no value of its own; else its value
+            if (isset($field['fallback'])) {
+                $given = (array) ($posted[$name] ?? []);
+                if (self::met(['condition' => ['useDefault' => [true]]], $given)) {
+                    $before === null || $changes[$name] = ['useDefault' => true];
+                    continue;
+                }
+                $value = trim((string) ($given['value'] ?? ''));
+                $value === (string) ($before ?? '') || ($value === '' && $before === null) || $changes[$name] = $value;
                 continue;
             }
             // A field of several values (the avatars of a list): a list of strings, the same in any order; addresses in the order given

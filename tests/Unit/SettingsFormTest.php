@@ -24,6 +24,17 @@ describe('a form of settings of a grid', function () {
             ->and($fields['match']['access']['level'])->toBe($form['change']['level']);
     });
 
+    test('has its groups in their order, each field its group; none for a form of one group', function () {
+        $document = ['paths' => ['/grids/{grid}/settings/grid' => ['get' => ['x-form' => ['title' => 'settings_grid',
+            'groups' => [['name' => 'grid', 'label' => 'group_grid_info'], ['name' => 'robust', 'label' => 'group_robust'], ['name' => 'broken']],
+            'fields' => [['name' => 'gridName', 'type' => 'string', 'group' => 'grid'], ['name' => 'consolePort', 'type' => 'integer', 'group' => 'robust']]]]]]];
+        $form = (new Contract($document))->settingsOf('grid');
+
+        expect($form['groups'])->toBe([['name' => 'grid', 'label' => 'group_grid_info'], ['name' => 'robust', 'label' => 'group_robust']])
+            ->and(array_column($form['fields'], 'group', 'name'))->toBe(['gridName' => 'grid', 'consolePort' => 'robust'])
+            ->and((new Contract(contract()))->settingsOf('models')['groups'])->toBe([]);
+    });
+
     test('is none for a group the engine does not describe', function () {
         expect((new Contract(contract()))->settingsOf('nothing'))->toBeNull();
     });
