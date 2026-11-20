@@ -115,13 +115,15 @@ final readonly class FormView
                 $value === self::parts($field, $before) && ! isset($value['password']) || $changes[$name] = $value;
                 continue;
             }
-            // A field of several values (the avatars of a list): a list of strings, the same in any order
+            // A field of several values (the avatars of a list): a list of strings, the same in any order; addresses in the order given
             if (! in_array($field['type'] ?? '', ['checkboxes', 'boolean'], true) && (! empty($field['multiple']) || is_array($posted[$name] ?? null))) {
                 $value = self::listOf($posted[$name] ?? []);
                 $sorted = $value;
                 $was = self::listOf($before ?? []);
-                sort($sorted);
-                sort($was);
+                if (($field['type'] ?? '') !== 'url') {
+                    sort($sorted);
+                    sort($was);
+                }
                 $sorted === $was || $changes[$name] = $value;
                 continue;
             }

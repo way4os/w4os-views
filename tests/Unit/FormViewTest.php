@@ -58,6 +58,14 @@ describe('the form of an item', function () {
             ->toMatchArray(['about' => 'Hello', 'role' => 'god', 'password' => 'secret1']);
     });
 
+    test('a list of addresses changes when its order does, empty lines left out', function () {
+        $form = ['fields' => [['name' => 'registers', 'type' => 'url', 'multiple' => true, 'label' => 'registers', 'access' => ['level' => 200]]]];
+        $view = FormView::of($form, ['registers' => ['https://a.example.org', 'https://b.example.org']], null, true, 250);
+
+        expect($view->changes(['registers' => ['https://b.example.org', 'https://a.example.org', ' ']]))->toBe(['registers' => ['https://b.example.org', 'https://a.example.org']])
+            ->and($view->changes(['registers' => ['https://a.example.org', '', 'https://b.example.org']]))->toBe([]);
+    });
+
     test('the names of the choices a form posts: unique, sorted, none empty', function () {
         expect(FormView::checked(['b', 'a', '', 'b']))->toBe(['a', 'b'])->and(FormView::checked(null))->toBe([]);
     });
