@@ -51,4 +51,39 @@ describe('a teleport link', function () {
         expect(TeleportLink::html($grid, 'Go', 'browser'))->toContain('<a class="w4os-tp-main" data-viewer="secondlife:///app/teleport/demo.w4os.org:3405">Go</a>')->not->toContain('href="secondlife')
             ->and(TeleportLink::html($grid, 'Go', 'viewer'))->toContain('<a class="w4os-tp-main" href="secondlife:///app/teleport/demo.w4os.org:3405"');
     });
+
+    test('is inline: the chevron joined to its text (no line break between them), the menu placed from it', function () {
+        $html = TeleportLink::html(grand_place(), 'Grand Place', 'browser', ['more' => 'More']);
+
+        expect($html)->toStartWith('<span class="w4os-tp" ')
+            ->toContain('>Grand Place</a>&#8288;<span class="w4os-tp-more"><button type="button" class="w4os-tp-toggle"', '<svg class="w4os-tp-icon" viewBox="0 0 24 24" width="1em" height="1em"', 'stroke="currentColor"', '</button><span class="w4os-tp-menu" role="menu" hidden>')
+            ->not->toContain('&#9662;', '…', '<div');
+    });
+
+    test('as a card is one link over its whole content, the chevron and its menu beside the link, never in it', function () {
+        $html = TeleportLink::html(grand_place(), 'Grand Place', 'browser', ['more' => 'More'], '', '<img src="p.jpg" alt=""> <span>Grand Place</span>', true);
+
+        expect($html)->toStartWith('<span class="w4os-tp w4os-tp-card" ')
+            ->toContain('href="secondlife://speculoos.world:8002/secondlife/Grand%20Place/128/128/21" data-browser=', '><img src="p.jpg" alt=""> <span>Grand Place</span></a>&#8288;<span class="w4os-tp-more"><button')
+            ->and(substr_count($html, '<a class="w4os-tp-main"'))->toBe(1)
+            ->and(strpos($html, 'w4os-tp-toggle'))->toBeGreaterThan(strpos($html, '</a>'))
+            ->and(TeleportLink::html([], 'Grand Place', 'browser', [], '', '<b>Grand Place</b>', true))->toBe('<b>Grand Place</b>');
+    });
+});
+
+describe('the assets of a teleport link', function () {
+    test('are in the package for any bridge to serve: an inline style without colours of its own, the card the only one in a corner', function () {
+        $css = (string) file_get_contents(dirname(__DIR__, 2).'/assets/'.TeleportLink::ASSETS['css'][0]);
+
+        expect($css)->toContain('.w4os-tp { display: inline; }', '.w4os-tp-more { position: relative; display: inline; white-space: nowrap; }', '.w4os-tp-menu { position: absolute; left: 0;', '.w4os-tp-menu[hidden] { display: none; }', '.w4os-tp[data-client="browser"] [data-for="viewer"], .w4os-tp[data-client="viewer"] [data-for="browser"] { display: none; }', '.w4os-tp-main:not([href]) { color: inherit;', '.w4os-tp-card > .w4os-tp-more { position: absolute; top: .4rem; right: .4rem; }')
+            ->and($css)->not->toMatch('/#[0-9a-f]{3,8}\b|rgba?\(|--pico-|--q2-/i')
+            // No block, flex or grid layout of the inline component, no right alignment out of the card
+            ->and(preg_replace('/\.w4os-tp-card[^{]*\{[^}]*\}|\.w4os-tp-menu[^{]*\{[^}]*\}|\.w4os-tp-item[^{]*\{[^}]*\}|\.w4os-tp-icon[^{]*\{[^}]*\}/', '', $css))->not->toMatch('/display: (block|flex|grid)|text-align: right|float:/');
+    });
+
+    test('have the script: the client told by the user agent, the menu kept within the window, closed by Escape or a click outside, the address selected without a clipboard', function () {
+        $js = (string) file_get_contents(dirname(__DIR__, 2).'/assets/'.TeleportLink::ASSETS['js'][0]);
+
+        expect($js)->toContain("new RegExp(tp.dataset.viewerPattern, 'i').test(navigator.userAgent)", "main.removeAttribute('href')", "classList.add('w4os-tp-menu-end')", "event.key === 'Escape'", 'tp.contains(event.target) || close(tp)', 'navigator.clipboard ?', 'input.select()');
+    });
 });
