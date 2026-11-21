@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- new (links): Link, a link of a site by its kind (plain, more, button, primary), its address built for the page shown (the engine's Url), its text escaped
 - new (forms): a database the grid has a default for, its default kept or chosen (`fallback`, `useDefault`)
 - new (lists): the texts of a list as the engine names them (`texts` of Contract::listOf(): title, menu, placeholder, empty, count)
 - fix (forms): a condition on a box met by the box as a form sends it (checked, or left out)
