@@ -5,8 +5,8 @@ namespace W4OS\Views;
 /**
  * A teleport link that fits where it is seen, the same anywhere a site prints one: its main link (the first the destination gives
  * for that client), then what else it can do for that client. One thing only: its icon after the text, no menu (the door of a
- * teleport, or the copy button where the address is all there is). More: a chevron opening the menu of all of them, the main
- * link first and marked, each teleport with its door, then "Copy the address".
+ * teleport, the map, or the copy button where the address is all there is). More: a chevron opening the menu of all of them, the
+ * main link first and marked, each teleport with its door, then "Show on the map", then "Copy the address".
  *
  * Inline through and through, as a link is: in a sentence, a table cell, a list or a heading, the icon a suffix of its text
  * (never on a line of its own), the menu laid over the page from it. Its content may be markup of the caller's ($html: a
@@ -20,12 +20,15 @@ namespace W4OS\Views;
  *     TeleportLink::html($links, 'Grand Place', 'browser', $texts, $pattern, '<img src="..." alt=""> Grand Place');
  *
  * Each link: `format` (its Destination format), `link`, `label` (its text in a menu, translated); the address to copy is the one
- * of format COPY (1024, host:port:Region). $texts: `more` (the label of the chevron), `copied` (said once copied).
+ * of format COPY (1024, host:port:Region), the map the one of format MAP (64). $texts: `more` (the label of the chevron), `copied` (said once copied).
  */
 final class TeleportLink
 {
     /** The format of the address to copy, host:port:Region as the map of a viewer takes it (Destination::LSL of the engine). */
     public const COPY = 1024;
+
+    /** The format of the map of the viewer at the place (Destination::MAP of the engine). */
+    public const MAP = 64;
 
     /** The clients a destination gives links for. */
     public const CLIENTS = ['browser', 'viewer'];
@@ -33,10 +36,11 @@ final class TeleportLink
     /** Its style and its script, in assets/ of this package: a bridge serves them on the pages that show teleport links. */
     public const ASSETS = ['css' => ['css/tp-link.css'], 'js' => ['js/tp-link.js']];
 
-    /** Its icons (Tabler 3.52: chevron-down, door-enter, copy, check), at the size and in the colour of the text. */
+    /** Its icons (Tabler 3.52: chevron-down, door-enter, map, copy, check), at the size and in the colour of the text. */
     private const ICONS = [
         'more' => '<path d="M6 9l6 6l6 -6"/>',
         'go' => '<path d="M13 12v.01"/><path d="M3 21h18"/><path d="M5 21v-16a2 2 0 0 1 2 -2h6m4 10.5v7.5"/><path d="M21 7h-7m3 -3l-3 3l3 3"/>',
+        'map' => '<path d="M3 7l6 -3l6 3l6 -3v13l-6 3l-6 -3l-6 3v-13"/><path d="M9 4v13"/><path d="M15 7v13"/>',
         'copy' => '<path d="M7 9.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667l0 -8.666"/><path d="M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1"/>',
         'done' => '<path d="M5 12l5 5l10 -10"/>',
     ];
@@ -51,26 +55,29 @@ final class TeleportLink
     {
         $client = in_array($client, self::CLIENTS, true) ? $client : 'browser';
         $content = $html ?? self::e($label);
-        // The teleports of each client and its address to copy
-        $go = $copy = [];
+        // The teleports of each client, its map and its address to copy
+        $go = $map = $copy = [];
         foreach (self::CLIENTS as $for) {
             foreach ((array) ($links[$for] ?? []) as $link) {
                 if (! is_array($link) || (string) ($link['link'] ?? '') === '') {
                     continue;
                 }
-                if ((int) ($link['format'] ?? 0) === self::COPY) {
+                $format = (int) ($link['format'] ?? 0);
+                if ($format === self::COPY) {
                     $copy[$for] ??= $link;
+                } elseif ($format === self::MAP) {
+                    $map[$for] ??= $link;
                 } else {
                     $go[$for][] = $link;
                 }
             }
         }
-        $count = fn (string $for) => count($go[$for] ?? []) + (isset($copy[$for]) ? 1 : 0);
+        $count = fn (string $for) => count($go[$for] ?? []) + (isset($map[$for]) ? 1 : 0) + (isset($copy[$for]) ? 1 : 0);
         if ($count('browser') + $count('viewer') === 0) {
             return $content;
         }
-        // Who has one thing only (a teleport, or the address), who a menu
-        $only = fn (string $kind) => array_values(array_filter(self::CLIENTS, fn ($for) => $count($for) === 1 && ($kind === 'go' ? isset($go[$for]) : isset($copy[$for]))));
+        // Who has one thing only (a teleport, the map, or the address), who a menu
+        $only = fn (string $kind) => array_values(array_filter(self::CLIENTS, fn ($for) => $count($for) === 1 && isset(['go' => $go, 'map' => $map, 'copy' => $copy][$kind][$for])));
         $menu = array_values(array_filter(self::CLIENTS, fn ($for) => $count($for) > 1));
 
         // The main link of the client told, none where that client has none (a grid alone in a browser): the text, the script giving
@@ -81,16 +88,25 @@ final class TeleportLink
         $out = $main === []
             ? '<span class="w4os-tp-main">'.$content.'</span>'
             : '<a class="w4os-tp-main"'.($href === '' ? '' : ' href="'.self::e($href).'"').self::data('browser', $main['browser'] ?? '').self::data('viewer', $main['viewer'] ?? '').'>'.$content.$door.'</a>';
+        foreach ($only('map') as $for) {
+            $label = self::e((string) ($map[$for]['label'] ?? ''));
+            $out .= '&#8288;<a class="w4os-tp-action w4os-tp-map" data-for="'.$for.'" href="'.self::e((string) $map[$for]['link']).'" aria-label="'.$label.'" title="'.$label.'">'.self::icon('map').'</a>';
+        }
         if ($only('copy') !== []) {
             $first = $copy[$only('copy')[0]];
             $out .= '&#8288;<button type="button" class="w4os-tp-action w4os-tp-copy"'.self::scope($only('copy')).self::copyData($first, $texts).' aria-label="'.self::e((string) ($first['label'] ?? '')).'" title="'.self::e((string) ($first['label'] ?? '')).'">'.self::icon('copy').self::icon('done').'</button>';
         }
         if ($menu !== []) {
-            // Every teleport of the client, its main one first and marked, then its address to copy
+            // Every teleport of the client, its main one first and marked, then its map, then its address to copy
             $items = '';
             foreach ($menu as $for) {
                 foreach ($go[$for] ?? [] as $at => $link) {
                     $items .= '<a role="menuitem" class="w4os-tp-item'.($at === 0 ? ' is-default' : '').'" data-for="'.$for.'"'.($at === 0 ? ' aria-current="true"' : '').' href="'.self::e((string) $link['link']).'">'.self::icon('go').'<span class="w4os-tp-label">'.self::e((string) ($link['label'] ?? '')).'</span></a>';
+                }
+            }
+            foreach ($menu as $for) {
+                if (isset($map[$for])) {
+                    $items .= '<a role="menuitem" class="w4os-tp-item w4os-tp-map" data-for="'.$for.'" href="'.self::e((string) $map[$for]['link']).'">'.self::icon('map').'<span class="w4os-tp-label">'.self::e((string) ($map[$for]['label'] ?? '')).'</span></a>';
                 }
             }
             $copiers = array_values(array_filter($menu, fn ($for) => isset($copy[$for])));

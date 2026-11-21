@@ -53,6 +53,17 @@ describe('a teleport link', function () {
             ->and($copy)->toBe('<span class="w4os-tp" data-w4os-tp data-client="browser"><span class="w4os-tp-main">A grid</span>&#8288;<button type="button" class="w4os-tp-action w4os-tp-copy" data-for="browser" data-w4os-tp-copy="a.org:80" data-copied="Copied" aria-label="Copy the address" title="Copy the address">[copy][done]</button></span>');
     });
 
+    test('shows the map between its teleports and the address to copy, or its icon alone when it is all a client has', function () {
+        $place = grand_place();
+        array_splice($place['viewer'], 2, 0, [['format' => 64, 'link' => 'secondlife:///app/worldmap/speculoos.world:8002:Grand%20Place/128/128/21', 'label' => 'Show on the map']]);
+        $menu = without_icons(TeleportLink::html($place, 'Grand Place', 'viewer'));
+        $alone = without_icons(TeleportLink::html(['viewer' => [['format' => 64, 'link' => 'secondlife:///app/worldmap/a.org:80:R', 'label' => 'Show on the map']]], 'R', 'viewer'));
+
+        expect($menu)->toContain('<span class="w4os-tp-label">secondlife:// link</span></a><a role="menuitem" class="w4os-tp-item w4os-tp-map" data-for="viewer" href="secondlife:///app/worldmap/speculoos.world:8002:Grand%20Place/128/128/21">[map]<span class="w4os-tp-label">Show on the map</span></a><button type="button" role="menuitem" class="w4os-tp-item w4os-tp-copy"')
+            ->and(substr_count($menu, 'w4os-tp-map'))->toBe(1)
+            ->and($alone)->toContain('<span class="w4os-tp-main">R</span>&#8288;<a class="w4os-tp-action w4os-tp-map" data-for="viewer" href="secondlife:///app/worldmap/a.org:80:R" aria-label="Show on the map" title="Show on the map">[map]</a>')->not->toContain('w4os-tp-toggle');
+    });
+
     test('escapes its text and its addresses; a destination without links is its text alone', function () {
         $odd = ['browser' => [['format' => 8, 'link' => 'hop://a.org:8002/A"B<', 'label' => '<i>hop</i>'], ['format' => 1024, 'link' => 'a.org:8002:A"B<', 'label' => 'Copy']]];
 

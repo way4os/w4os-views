@@ -5,7 +5,7 @@
 .w4os-tp { display: inline; }
 .w4os-tp-main:not([href]) { color: inherit; text-decoration: none; cursor: default; }
 .w4os-tp-more { position: relative; display: inline; white-space: nowrap; }
-.w4os-tp-toggle, .w4os-tp-action { display: inline-flex; align-items: center; justify-content: center; box-sizing: content-box; width: 1em; height: 1em; min-width: 0; min-height: 0; margin: -.4em -.2em -.4em 0; padding: .4em .2em .4em .3em; border: 0; border-radius: .3em; background: none; color: inherit; font: inherit; line-height: 1; vertical-align: -.15em; cursor: pointer; box-shadow: none; }
+.w4os-tp-toggle, .w4os-tp-action { display: inline-flex; align-items: center; justify-content: center; box-sizing: content-box; width: 1em; height: 1em; min-width: 0; min-height: 0; margin: -.4em -.2em -.4em 0; padding: .4em .2em .4em .3em; border: 0; border-radius: .3em; background: none; color: inherit; font: inherit; line-height: 1; vertical-align: -.15em; text-decoration: none; cursor: pointer; box-shadow: none; }
 .w4os-tp-toggle:hover, .w4os-tp-toggle:focus-visible, .w4os-tp-toggle[aria-expanded="true"], .w4os-tp-action:hover, .w4os-tp-action:focus-visible { background: color-mix(in srgb, currentColor 12%, transparent); }
 .w4os-tp-icon { display: block; flex: none; width: 1em; height: 1em; }
 .w4os-tp-go { display: inline-block; margin-left: .25em; vertical-align: -.15em; }
