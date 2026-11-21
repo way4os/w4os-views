@@ -19,8 +19,9 @@ namespace W4OS\Views;
  *     TeleportLink::html(['browser' => $browser, 'viewer' => $viewer], 'Grand Place', 'browser', $texts, $pattern);
  *     TeleportLink::html($links, 'Grand Place', 'browser', $texts, $pattern, '<img src="..." alt=""> Grand Place');
  *
- * Each link: `format` (its Destination format), `link`, `label` (its text in a menu, translated); the address to copy is the one
- * of format COPY (1024, host:port:Region), the map the one of format MAP (64). $texts: `more` (the label of the chevron), `copied` (said once copied).
+ * Each link: `action` (teleport, map or copy: what it does), `format` (its Destination format), `link`, `label` (its text in a
+ * menu, translated). Without an action (an engine before them), the format tells it: COPY (1024, host:port:Region) the address
+ * to copy, MAP (64) the map, any other a teleport. $texts: `more` (the label of the chevron), `copied` (said once copied).
  */
 final class TeleportLink
 {
@@ -46,7 +47,7 @@ final class TeleportLink
     ];
 
     /**
-     * @param array{browser?: list<array{format:int,link:string,label:string}>, viewer?: list<array{format:int,link:string,label:string}>} $links
+     * @param array{browser?: list<array{action?:string,format?:int,link:string,label:string}>, viewer?: list<array{action?:string,format?:int,link:string,label:string}>} $links
      * @param array{more?: string, copied?: string} $texts
      * @param string|null $html the content of the main link in place of its label, markup the caller has escaped (a picture and
      *                          a name)
@@ -62,17 +63,17 @@ final class TeleportLink
                 if (! is_array($link) || (string) ($link['link'] ?? '') === '') {
                     continue;
                 }
-                $format = (int) ($link['format'] ?? 0);
-                if ($format === self::COPY) {
+                $action = self::action($link);
+                if ($action === 'copy') {
                     $copy[$for] ??= $link;
-                } elseif ($format === self::MAP) {
-                    $map[$for] ??= $link;
+                } elseif ($action === 'map') {
+                    $map[$for][] = $link;
                 } else {
                     $go[$for][] = $link;
                 }
             }
         }
-        $count = fn (string $for) => count($go[$for] ?? []) + (isset($map[$for]) ? 1 : 0) + (isset($copy[$for]) ? 1 : 0);
+        $count = fn (string $for) => count($go[$for] ?? []) + count($map[$for] ?? []) + (isset($copy[$for]) ? 1 : 0);
         if ($count('browser') + $count('viewer') === 0) {
             return $content;
         }
@@ -89,8 +90,8 @@ final class TeleportLink
             ? '<span class="w4os-tp-main">'.$content.'</span>'
             : '<a class="w4os-tp-main"'.($href === '' ? '' : ' href="'.self::e($href).'"').self::data('browser', $main['browser'] ?? '').self::data('viewer', $main['viewer'] ?? '').'>'.$content.$door.'</a>';
         foreach ($only('map') as $for) {
-            $label = self::e((string) ($map[$for]['label'] ?? ''));
-            $out .= '&#8288;<a class="w4os-tp-action w4os-tp-map" data-for="'.$for.'" href="'.self::e((string) $map[$for]['link']).'" aria-label="'.$label.'" title="'.$label.'">'.self::icon('map').'</a>';
+            $label = self::e((string) ($map[$for][0]['label'] ?? ''));
+            $out .= '&#8288;<a class="w4os-tp-action w4os-tp-map" data-for="'.$for.'" href="'.self::e((string) $map[$for][0]['link']).'" aria-label="'.$label.'" title="'.$label.'">'.self::icon('map').'</a>';
         }
         if ($only('copy') !== []) {
             $first = $copy[$only('copy')[0]];
@@ -105,8 +106,8 @@ final class TeleportLink
                 }
             }
             foreach ($menu as $for) {
-                if (isset($map[$for])) {
-                    $items .= '<a role="menuitem" class="w4os-tp-item w4os-tp-map" data-for="'.$for.'" href="'.self::e((string) $map[$for]['link']).'">'.self::icon('map').'<span class="w4os-tp-label">'.self::e((string) ($map[$for]['label'] ?? '')).'</span></a>';
+                foreach ($map[$for] ?? [] as $link) {
+                    $items .= '<a role="menuitem" class="w4os-tp-item w4os-tp-map" data-for="'.$for.'" href="'.self::e((string) $link['link']).'">'.self::icon('map').'<span class="w4os-tp-label">'.self::e((string) ($link['label'] ?? '')).'</span></a>';
                 }
             }
             $copiers = array_values(array_filter($menu, fn ($for) => isset($copy[$for])));
@@ -120,6 +121,21 @@ final class TeleportLink
         }
 
         return '<span class="w4os-tp" data-w4os-tp data-client="'.$client.'"'.($pattern === '' ? '' : ' data-viewer-pattern="'.self::e($pattern).'"').'>'.$out.'</span>';
+    }
+
+    /** What a link does: its action, else its format tells it (an engine before actions). @param array<string,mixed> $link */
+    private static function action(array $link): string
+    {
+        $action = (string) ($link['action'] ?? '');
+        if (in_array($action, ['teleport', 'map', 'copy'], true)) {
+            return $action;
+        }
+
+        return match ((int) ($link['format'] ?? 0)) {
+            self::COPY => 'copy',
+            self::MAP => 'map',
+            default => 'teleport',
+        };
     }
 
     /** An icon, decorative: the text beside it, or the label of its button, says what it does. */

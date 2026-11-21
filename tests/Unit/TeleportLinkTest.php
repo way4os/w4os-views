@@ -64,6 +64,21 @@ describe('a teleport link', function () {
             ->and($alone)->toContain('<span class="w4os-tp-main">R</span>&#8288;<a class="w4os-tp-action w4os-tp-map" data-for="viewer" href="secondlife:///app/worldmap/a.org:80:R" aria-label="Show on the map" title="Show on the map">[map]</a>')->not->toContain('w4os-tp-toggle');
     });
 
+    test('tells what a link does by its action, any format: a teleport its door, each map in its place with its icon, the copy last', function () {
+        $links = ['viewer' => [
+            ['action' => 'teleport', 'format' => 4096, 'link' => 'hop:///app/teleport/a.org:80:R', 'label' => 'Teleport (hop app)'],
+            ['action' => 'copy', 'format' => 16, 'link' => 'a.org:80:R', 'label' => 'Copy the address'],
+            ['action' => 'map', 'format' => 8192, 'link' => 'hop:///app/worldmap/a.org:80:R', 'label' => 'Map (hop app)'],
+            ['action' => 'map', 'format' => 64, 'link' => 'secondlife:///app/worldmap/a.org:80:R', 'label' => 'Show on the map'],
+            ['action' => 'teleport', 'format' => 1024, 'link' => 'secondlife:///app/teleport/a.org:80:R', 'label' => 'Teleport'],
+        ]];
+        $html = without_icons(TeleportLink::html($links, 'R', 'viewer'));
+
+        expect($html)->toContain('<a class="w4os-tp-main" href="hop:///app/teleport/a.org:80:R"')
+            ->and(preg_match_all('#\[(go|map|copy)\](?:\[done\])?<span class="w4os-tp-label">([^<]+)<#', $html, $items) ? array_map(fn ($icon, $label) => "$icon $label", $items[1], $items[2]) : [])
+            ->toBe(['go Teleport (hop app)', 'go Teleport', 'map Map (hop app)', 'map Show on the map', 'copy Copy the address']);
+    });
+
     test('escapes its text and its addresses; a destination without links is its text alone', function () {
         $odd = ['browser' => [['format' => 8, 'link' => 'hop://a.org:8002/A"B<', 'label' => '<i>hop</i>'], ['format' => 1024, 'link' => 'a.org:8002:A"B<', 'label' => 'Copy']]];
 
