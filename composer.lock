@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ab8a84df12d9a955e566ea92e959b5ff",
+    "content-hash": "85d1580d3dab4e1703a68242cd04c991",
     "packages": [
         {
             "name": "carbonphp/carbon-doctrine-types",
@@ -5961,7 +5961,7 @@
             "dist": {
                 "type": "path",
                 "url": "../opensim-engine",
-                "reference": "172cfc1111022d443886ba43e796baf2833e0c73"
+                "reference": "f3a5fc4f229928d2e7065756f9cc3bf92d27b371"
             },
             "require": {
                 "ext-curl": "*",
@@ -6118,7 +6118,7 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.3",
+        "php": ">=8.2",
         "ext-intl": "*"
     },
     "platform-dev": {},
