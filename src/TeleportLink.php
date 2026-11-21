@@ -13,12 +13,12 @@ namespace W4OS\Views;
  *     TeleportLink::html(['browser' => $browser, 'viewer' => $viewer], 'Grand Place', 'browser', $texts, $pattern);
  *
  * Each link: `format` (its Destination format), `link`, `label` (its text in a menu, translated); the address to copy is the one
- * of format TXT (16). $texts: `more` (the label of the button), `copied` (said once copied).
+ * of format COPY (1024, host:port:Region). $texts: `more` (the label of the button), `copied` (said once copied).
  */
 final class TeleportLink
 {
-    /** The format of the address to copy (Destination::TXT of the engine). */
-    public const TXT = 16;
+    /** The format of the address to copy, host:port:Region as the map of a viewer takes it (Destination::LSL of the engine). */
+    public const COPY = 1024;
 
     /** The clients a destination gives links for. */
     public const CLIENTS = ['browser', 'viewer'];
@@ -36,7 +36,7 @@ final class TeleportLink
         foreach (self::CLIENTS as $for) {
             $own = array_values(array_filter((array) ($links[$for] ?? []), fn ($link) => is_array($link) && (string) ($link['link'] ?? '') !== ''));
             foreach ($own as $link) {
-                if ((int) ($link['format'] ?? 0) === self::TXT) {
+                if ((int) ($link['format'] ?? 0) === self::COPY) {
                     $copy ??= $link;
                     continue;
                 }
