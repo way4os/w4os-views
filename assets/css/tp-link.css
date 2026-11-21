@@ -1,17 +1,23 @@
 /* Teleport links (W4OS\Views\TeleportLink): inline as a link is, in a sentence, a table cell, a list or a heading. The chevron a
-   suffix of the text, at its size and colour, its hit area wider than it without changing the line; the menu laid over the page
-   from it. Where it goes on the page is the caller's style. No colour of its own: the ones of the text, of the page (Canvas) and
+   or the one icon of its only action (a door, the copy button) a suffix of the text, at its size and colour, its hit area wider
+   than it without changing the line; the menu laid over the page from it. Where it goes on the page is the caller's style. No colour of its own: the ones of the text, of the page (Canvas) and
    of the theme. */
 .w4os-tp { display: inline; }
 .w4os-tp-main:not([href]) { color: inherit; text-decoration: none; cursor: default; }
 .w4os-tp-more { position: relative; display: inline; white-space: nowrap; }
-.w4os-tp-toggle { display: inline-flex; align-items: center; justify-content: center; box-sizing: content-box; width: 1em; height: 1em; min-width: 0; min-height: 0; margin: -.4em -.2em -.4em 0; padding: .4em .2em .4em .15em; border: 0; border-radius: .3em; background: none; color: inherit; font: inherit; line-height: 1; vertical-align: -.15em; cursor: pointer; box-shadow: none; }
-.w4os-tp-toggle:hover, .w4os-tp-toggle:focus-visible, .w4os-tp-toggle[aria-expanded="true"] { background: color-mix(in srgb, currentColor 12%, transparent); }
-.w4os-tp-icon { display: block; width: 1em; height: 1em; }
+.w4os-tp-toggle, .w4os-tp-action { display: inline-flex; align-items: center; justify-content: center; box-sizing: content-box; width: 1em; height: 1em; min-width: 0; min-height: 0; margin: -.4em -.2em -.4em 0; padding: .4em .2em .4em .3em; border: 0; border-radius: .3em; background: none; color: inherit; font: inherit; line-height: 1; vertical-align: -.15em; cursor: pointer; box-shadow: none; }
+.w4os-tp-toggle:hover, .w4os-tp-toggle:focus-visible, .w4os-tp-toggle[aria-expanded="true"], .w4os-tp-action:hover, .w4os-tp-action:focus-visible { background: color-mix(in srgb, currentColor 12%, transparent); }
+.w4os-tp-icon { display: block; flex: none; width: 1em; height: 1em; }
+.w4os-tp-go { display: inline-block; margin-left: .25em; vertical-align: -.15em; }
+.w4os-tp-icon-done, .w4os-tp-copy.is-copied .w4os-tp-icon-copy { display: none; }
+.w4os-tp-copy.is-copied .w4os-tp-icon-done { display: block; }
 .w4os-tp-menu { position: absolute; left: 0; top: calc(100% + .3em); z-index: 30; display: flex; flex-direction: column; min-width: 12rem; max-width: calc(100vw - 2rem); padding: .3rem 0; border: 1px solid color-mix(in srgb, currentColor 25%, transparent); border-radius: .5rem; background: Canvas; color: CanvasText; box-shadow: 0 .5rem 1.25rem color-mix(in srgb, CanvasText 15%, transparent); font-size: 1rem; font-weight: normal; font-style: normal; letter-spacing: normal; text-transform: none; line-height: 1.3; text-align: start; white-space: normal; }
 .w4os-tp-menu.w4os-tp-menu-end { left: auto; right: 0; }
 .w4os-tp-menu[hidden] { display: none; }
-.w4os-tp-item { display: block; margin: 0; padding: .4rem .9rem; border: 0; border-radius: 0; background: none; color: inherit; font: inherit; line-height: 1.3; text-align: start; text-decoration: none; white-space: nowrap; cursor: pointer; }
+.w4os-tp-item { display: flex; align-items: center; gap: .55rem; margin: 0; padding: .4rem .9rem; border: 0; border-radius: 0; background: none; color: inherit; font: inherit; line-height: 1.3; text-align: start; text-decoration: none; white-space: nowrap; cursor: pointer; }
 .w4os-tp-item:hover, .w4os-tp-item:focus { background: color-mix(in srgb, currentColor 8%, transparent); }
+.w4os-tp-item.is-default { font-weight: bold; }
+.w4os-tp-item .w4os-tp-icon { opacity: .75; }
 .w4os-tp[data-client="browser"] [data-for="viewer"], .w4os-tp[data-client="viewer"] [data-for="browser"] { display: none; }
 .w4os-tp-address { margin: .3rem .9rem; font: inherit; }
+.w4os-tp > .w4os-tp-address { margin: 0 0 0 .3em; }

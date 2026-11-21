@@ -1,6 +1,7 @@
 // Teleport links (W4OS\Views\TeleportLink): the links of the client the page is seen from (the viewer's own browser, by its user
-// agent), the menu of the other ones opened by its chevron, kept within the window, closed on Escape or a click outside, its items
-// reached with the arrows; the address copied, or shown selected where the browser gives no clipboard.
+// agent), the menu of all of them opened by its chevron, kept within the window, closed on Escape or a click outside, its items
+// reached with the arrows; the address copied (its button saying so for a while), or shown selected where the browser gives no
+// clipboard.
 (() => {
     document.querySelectorAll('[data-w4os-tp]').forEach((tp) => {
         let client = tp.dataset.client;
@@ -29,7 +30,7 @@
         input.readOnly = true;
         input.value = text;
         input.className = 'w4os-tp-address';
-        input.setAttribute('aria-label', copy.textContent);
+        input.setAttribute('aria-label', copy.getAttribute('aria-label') || copy.textContent);
         copy.replaceWith(input);
         input.focus();
         input.select();
@@ -53,10 +54,14 @@
         const copy = event.target.closest('.w4os-tp-copy');
         if (copy) {
             const text = copy.dataset.w4osTpCopy;
-            const label = copy.textContent;
+            // Said on its label, or on its button when it is an icon alone
+            const label = copy.querySelector('.w4os-tp-label');
+            const said = label ? label.textContent : copy.getAttribute('aria-label');
+            const say = (words) => label ? (label.textContent = words) : (copy.setAttribute('aria-label', words), copy.title = words);
             const done = () => {
-                copy.textContent = copy.dataset.copied || label;
-                setTimeout(() => { copy.textContent = label; }, 2000);
+                copy.classList.add('is-copied');
+                say(copy.dataset.copied || said);
+                setTimeout(() => { copy.classList.remove('is-copied'); say(said); }, 2000);
             };
             navigator.clipboard ? navigator.clipboard.writeText(text).then(done, () => select(copy, text)) : select(copy, text);
         }

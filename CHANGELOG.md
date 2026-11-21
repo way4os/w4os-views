@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- change (links): the menu of a teleport link lists all its links, the main one first and marked, each with a door (Tabler door-enter); one action only is its icon alone, without a menu (the door, or the copy button)
 - new (links): the style and script of a teleport link in the package (TeleportLink::ASSETS), one source for every bridge; the link inline as any link, its menu opened by a chevron joined to its text, its content markup of the caller's (a picture and a name)
 - change (requirements): PHP 8.2 or later, as the engine and the helpers
 - new (links): TeleportLink, a teleport link that fits where it is seen: the main link of its client, a menu of its other links and the address to copy, the links of both clients written for a page kept in a cache

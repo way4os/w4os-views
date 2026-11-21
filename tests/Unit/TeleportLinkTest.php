@@ -21,42 +21,58 @@ function grand_place(): array
     ];
 }
 
+/** The markup of a teleport link without its icons, to read. */
+function without_icons(string $html): string
+{
+    return (string) preg_replace('#<svg class="w4os-tp-icon w4os-tp-icon-([a-z]+)"[^>]*>.*?</svg>#', '[$1]', $html);
+}
+
 describe('a teleport link', function () {
-    test('has the main link of the client it is seen from, the other links of each client in its menu, and the address to copy', function () {
-        $browser = TeleportLink::html(grand_place(), 'Grand Place', 'browser', ['more' => 'More ways to go there', 'copied' => 'Copied'], 'Firestorm|SecondLife');
-        $viewer = TeleportLink::html(grand_place(), 'Grand Place', 'viewer', ['more' => 'More ways to go there', 'copied' => 'Copied']);
+    test('has the main link of the client it is seen from, and a menu of all its links, the main one first and marked, then the address to copy', function () {
+        $browser = without_icons(TeleportLink::html(grand_place(), 'Grand Place', 'browser', ['more' => 'More ways to go there', 'copied' => 'Copied'], 'Firestorm|SecondLife'));
+        $viewer = without_icons(TeleportLink::html(grand_place(), 'Grand Place', 'viewer', ['more' => 'More ways to go there', 'copied' => 'Copied']));
 
         expect($browser)->toContain('<span class="w4os-tp" data-w4os-tp data-client="browser" data-viewer-pattern="Firestorm|SecondLife">')
             ->and($browser)->toContain('<a class="w4os-tp-main" href="secondlife://speculoos.world:8002/secondlife/Grand%20Place/128/128/21" data-browser="secondlife://speculoos.world:8002/secondlife/Grand%20Place/128/128/21" data-viewer="secondlife:///app/teleport/speculoos.world:8002:Grand%20Place/128/128/21">Grand Place</a>')
-            ->and($browser)->toContain('<a role="menuitem" class="w4os-tp-item" data-for="browser" href="hop://speculoos.world:8002/Grand%20Place/128/128/21">hop:// link</a>')
-            ->and($browser)->toContain('<a role="menuitem" class="w4os-tp-item" data-for="viewer" href="secondlife://speculoos.world:8002/secondlife/Grand%20Place/128/128/21">secondlife:// link</a>')
-            ->and($browser)->toContain('<button type="button" role="menuitem" class="w4os-tp-item w4os-tp-copy" data-w4os-tp-copy="speculoos.world:8002:Grand Place/128/128/21" data-copied="Copied">Copy the address</button>')
-            ->and($browser)->toContain('aria-haspopup="true" aria-expanded="false" aria-label="More ways to go there"', '<span class="w4os-tp-menu" role="menu" hidden>')
-            ->and(substr_count($browser, 'class="w4os-tp-item w4os-tp-copy"'))->toBe(1)
+            // Its main link in the menu too, never hidden, each teleport with its door
+            ->and($browser)->toContain('<a role="menuitem" class="w4os-tp-item is-default" data-for="browser" aria-current="true" href="secondlife://speculoos.world:8002/secondlife/Grand%20Place/128/128/21">[go]<span class="w4os-tp-label">secondlife:// link</span></a><a role="menuitem" class="w4os-tp-item" data-for="browser" href="hop://speculoos.world:8002/Grand%20Place/128/128/21">[go]<span class="w4os-tp-label">hop:// link</span></a>')
+            ->and($browser)->toContain('<a role="menuitem" class="w4os-tp-item is-default" data-for="viewer" aria-current="true" href="secondlife:///app/teleport/speculoos.world:8002:Grand%20Place/128/128/21">[go]<span class="w4os-tp-label">Teleport in the viewer</span></a>')
+            ->and($browser)->toContain('<button type="button" role="menuitem" class="w4os-tp-item w4os-tp-copy" data-w4os-tp-copy="speculoos.world:8002:Grand Place/128/128/21" data-copied="Copied">[copy][done]<span class="w4os-tp-label">Copy the address</span></button></span></span></span>')
+            ->and($browser)->toContain('<span class="w4os-tp-more"><button type="button" class="w4os-tp-toggle" aria-haspopup="true" aria-expanded="false" aria-label="More ways to go there" title="More ways to go there">[more]</button><span class="w4os-tp-menu" role="menu" hidden>')
+            ->and(substr_count($browser, 'w4os-tp-copy"'))->toBe(1)
+            ->and($browser)->not->toContain('w4os-tp-action', 'w4os-tp-go"')
             // Seen from the viewer: its own main link
             ->and($viewer)->toContain('data-client="viewer"', '<a class="w4os-tp-main" href="secondlife:///app/teleport/speculoos.world:8002:Grand%20Place/128/128/21"');
     });
 
-    test('escapes its text and its addresses; a destination without links is its text alone, one with the address only a menu to copy it', function () {
-        $odd = ['browser' => [['format' => 8, 'link' => 'hop://a.org:8002/A"B<', 'label' => '<i>hop</i>'], ['format' => 1024, 'link' => 'a.org:8002:A"B<', 'label' => 'Copy']]];
+    test('has no menu for one thing only: a teleport its door after the text, in the link; the address alone its copy button', function () {
+        $teleport = without_icons(TeleportLink::html(['browser' => [['format' => 8, 'link' => 'hop://a.org:80/R', 'label' => 'hop']], 'viewer' => [['format' => 32, 'link' => 'secondlife:///app/teleport/a.org:80:R', 'label' => 'Teleport']]], 'R'));
+        $copy = without_icons(TeleportLink::html(['browser' => [['format' => 1024, 'link' => 'a.org:80', 'label' => 'Copy the address']]], 'A grid', 'browser', ['copied' => 'Copied']));
 
-        expect(TeleportLink::html($odd, 'A & "B" <c>'))->toContain('>A &amp; &quot;B&quot; &lt;c&gt;</a>', 'href="hop://a.org:8002/A&quot;B&lt;"', 'data-w4os-tp-copy="a.org:8002:A&quot;B&lt;"')->not->toContain('<i>', '<c>')
-            ->and(TeleportLink::html([], 'Nowhere <x>'))->toBe('Nowhere &lt;x&gt;')
-            ->and(TeleportLink::html(['browser' => [['format' => 1024, 'link' => 'a.org:8002', 'label' => 'Copy']]], 'A grid'))->toContain('<span class="w4os-tp-main">A grid</span>', 'w4os-tp-copy');
+        expect($teleport)->toContain('>R&#8288;<span class="w4os-tp-go">[go]</span></a></span>')->not->toContain('w4os-tp-more', 'w4os-tp-toggle', 'w4os-tp-menu')
+            ->and($copy)->toBe('<span class="w4os-tp" data-w4os-tp data-client="browser"><span class="w4os-tp-main">A grid</span>&#8288;<button type="button" class="w4os-tp-action w4os-tp-copy" data-for="browser" data-w4os-tp-copy="a.org:80" data-copied="Copied" aria-label="Copy the address" title="Copy the address">[copy][done]</button></span>');
     });
 
-    test('has no link of the other client as its main link: a grid alone in a browser is its text, its viewer link kept for the script', function () {
-        $grid = ['browser' => [['format' => 1024, 'link' => 'demo.w4os.org:3405', 'label' => 'Copy']], 'viewer' => [['format' => 32, 'link' => 'secondlife:///app/teleport/demo.w4os.org:3405', 'label' => 'Teleport'], ['format' => 1024, 'link' => 'demo.w4os.org:3405', 'label' => 'Copy']]];
+    test('escapes its text and its addresses; a destination without links is its text alone', function () {
+        $odd = ['browser' => [['format' => 8, 'link' => 'hop://a.org:8002/A"B<', 'label' => '<i>hop</i>'], ['format' => 1024, 'link' => 'a.org:8002:A"B<', 'label' => 'Copy']]];
 
-        expect(TeleportLink::html($grid, 'Go', 'browser'))->toContain('<a class="w4os-tp-main" data-viewer="secondlife:///app/teleport/demo.w4os.org:3405">Go</a>')->not->toContain('href="secondlife')
+        expect(TeleportLink::html($odd, 'A & "B" <c>'))->toContain('>A &amp; &quot;B&quot; &lt;c&gt;</a>', 'href="hop://a.org:8002/A&quot;B&lt;"', 'data-w4os-tp-copy="a.org:8002:A&quot;B&lt;"', '&lt;i&gt;hop&lt;/i&gt;')->not->toContain('<i>', '<c>')
+            ->and(TeleportLink::html([], 'Nowhere <x>'))->toBe('Nowhere &lt;x&gt;');
+    });
+
+    test('has no link of the other client: a grid alone in a browser is its text and its copy button, the viewer its teleport and its menu', function () {
+        $grid = ['browser' => [['format' => 1024, 'link' => 'demo.w4os.org:3405', 'label' => 'Copy']], 'viewer' => [['format' => 32, 'link' => 'secondlife:///app/teleport/demo.w4os.org:3405', 'label' => 'Teleport'], ['format' => 1024, 'link' => 'demo.w4os.org:3405', 'label' => 'Copy']]];
+        $browser = without_icons(TeleportLink::html($grid, 'Go', 'browser'));
+
+        expect($browser)->toContain('<a class="w4os-tp-main" data-viewer="secondlife:///app/teleport/demo.w4os.org:3405">Go</a>', '<button type="button" class="w4os-tp-action w4os-tp-copy" data-for="browser"', '<span class="w4os-tp-more" data-for="viewer">')->not->toContain('<a class="w4os-tp-main" href')
             ->and(TeleportLink::html($grid, 'Go', 'viewer'))->toContain('<a class="w4os-tp-main" href="secondlife:///app/teleport/demo.w4os.org:3405"');
     });
 
-    test('is inline: the chevron joined to its text (no line break between them), the menu placed from it', function () {
+    test('is inline: its icon joined to its text (no line break between them), the menu placed from it', function () {
         $html = TeleportLink::html(grand_place(), 'Grand Place', 'browser', ['more' => 'More']);
 
         expect($html)->toStartWith('<span class="w4os-tp" ')
-            ->toContain('>Grand Place</a>&#8288;<span class="w4os-tp-more"><button type="button" class="w4os-tp-toggle"', '<svg class="w4os-tp-icon" viewBox="0 0 24 24" width="1em" height="1em"', 'stroke="currentColor"', '</button><span class="w4os-tp-menu" role="menu" hidden>')
+            ->toContain('>Grand Place</a>&#8288;<span class="w4os-tp-more"><button type="button" class="w4os-tp-toggle"', '<svg class="w4os-tp-icon w4os-tp-icon-more" viewBox="0 0 24 24" width="1em" height="1em"', 'stroke="currentColor"', '<path d="M13 12v.01"/>', '</button><span class="w4os-tp-menu" role="menu" hidden>')
             ->not->toContain('&#9662;', '…', '<div');
     });
 
@@ -80,12 +96,12 @@ describe('the assets of a teleport link', function () {
             ->and($css)->not->toContain('w4os-tp-card')
             ->and($css)->not->toMatch('/#[0-9a-f]{3,8}\b|rgba?\(|--pico-|--q2-/i')
             // No block, flex or grid layout of the inline component, no right alignment
-            ->and(preg_replace('/\.w4os-tp-menu[^{]*\{[^}]*\}|\.w4os-tp-item[^{]*\{[^}]*\}|\.w4os-tp-icon[^{]*\{[^}]*\}/', '', $css))->not->toMatch('/display: (block|flex|grid)|text-align: right|float:/');
+            ->and(preg_replace('/[^{}]*(w4os-tp-menu|w4os-tp-item|w4os-tp-icon)[^{}]*\{[^}]*\}/', '', $css))->not->toMatch('/display: (block|flex|grid)|text-align: right|float:/');
     });
 
-    test('have the script: the client told by the user agent, the menu kept within the window, closed by Escape or a click outside, the address selected without a clipboard', function () {
+    test('have the script: the client told by the user agent, the menu kept within the window, closed by Escape or a click outside, the address copied and said, or selected without a clipboard', function () {
         $js = (string) file_get_contents(dirname(__DIR__, 2).'/assets/'.TeleportLink::ASSETS['js'][0]);
 
-        expect($js)->toContain("new RegExp(tp.dataset.viewerPattern, 'i').test(navigator.userAgent)", "main.removeAttribute('href')", "classList.add('w4os-tp-menu-end')", "event.key === 'Escape'", 'tp.contains(event.target) || close(tp)', 'navigator.clipboard ?', 'input.select()');
+        expect($js)->toContain("new RegExp(tp.dataset.viewerPattern, 'i').test(navigator.userAgent)", "main.removeAttribute('href')", "classList.add('w4os-tp-menu-end')", "event.key === 'Escape'", 'tp.contains(event.target) || close(tp)', 'navigator.clipboard ?', 'input.select()', "copy.classList.add('is-copied')");
     });
 });
