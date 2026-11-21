@@ -50,10 +50,12 @@ final class TeleportLink
         if ($main === [] && $copy === null) {
             return self::e($label);
         }
-        $href = $main[$client] ?? $main['browser'] ?? $main['viewer'] ?? '';
-        $first = $href === ''
+        // The main link of the client told, none where that client has none (a grid alone in a browser): the text, the script giving
+        // it the address of the client it finds
+        $href = $main[$client] ?? '';
+        $first = $main === []
             ? '<span class="w4os-tp-main">'.self::e($label).'</span>'
-            : '<a class="w4os-tp-main" href="'.self::e($href).'"'.self::data('browser', $main['browser'] ?? '').self::data('viewer', $main['viewer'] ?? '').'>'.self::e($label).'</a>';
+            : '<a class="w4os-tp-main"'.($href === '' ? '' : ' href="'.self::e($href).'"').self::data('browser', $main['browser'] ?? '').self::data('viewer', $main['viewer'] ?? '').'>'.self::e($label).'</a>';
         if ($copy !== null) {
             $items .= '<button type="button" role="menuitem" class="w4os-tp-item w4os-tp-copy" data-w4os-tp-copy="'.self::e((string) $copy['link']).'" data-copied="'.self::e((string) ($texts['copied'] ?? '')).'">'.self::e((string) ($copy['label'] ?? '')).'</button>';
         }

@@ -44,4 +44,11 @@ describe('a teleport link', function () {
             ->and(TeleportLink::html([], 'Nowhere <x>'))->toBe('Nowhere &lt;x&gt;')
             ->and(TeleportLink::html(['browser' => [['format' => 1024, 'link' => 'a.org:8002', 'label' => 'Copy']]], 'A grid'))->toContain('<span class="w4os-tp-main">A grid</span>', 'w4os-tp-copy');
     });
+
+    test('has no link of the other client as its main link: a grid alone in a browser is its text, its viewer link kept for the script', function () {
+        $grid = ['browser' => [['format' => 1024, 'link' => 'demo.w4os.org:3405', 'label' => 'Copy']], 'viewer' => [['format' => 32, 'link' => 'secondlife:///app/teleport/demo.w4os.org:3405', 'label' => 'Teleport'], ['format' => 1024, 'link' => 'demo.w4os.org:3405', 'label' => 'Copy']]];
+
+        expect(TeleportLink::html($grid, 'Go', 'browser'))->toContain('<a class="w4os-tp-main" data-viewer="secondlife:///app/teleport/demo.w4os.org:3405">Go</a>')->not->toContain('href="secondlife')
+            ->and(TeleportLink::html($grid, 'Go', 'viewer'))->toContain('<a class="w4os-tp-main" href="secondlife:///app/teleport/demo.w4os.org:3405"');
+    });
 });
