@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- new (links): TeleportLink, a teleport link that fits where it is seen: the main link of its client, a menu of its other links and the address to copy, the links of both clients written for a page kept in a cache
 - new (links): Link, a link of a site by its kind (plain, more, button, primary), its address built for the page shown (the engine's Url), its text escaped
 - new (forms): a database the grid has a default for, its default kept or chosen (`fallback`, `useDefault`)
 - new (lists): the texts of a list as the engine names them (`texts` of Contract::listOf(): title, menu, placeholder, empty, count)
