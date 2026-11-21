@@ -3,7 +3,7 @@
 namespace W4OS\Views;
 
 /**
- * Who may do an operation of the engine: the engine's own `OpenSim\Api\Access` when its library is there, else the same rule on
+ * Who may do an operation of the engine: the engine's own `W4OS\Engine\Api\Access` when its library is there, else the same rule on
  * the access the contract gives (`x-access`, read by Contract::access()).
  */
 final class Access
@@ -17,9 +17,9 @@ final class Access
     public static function allows(array $access, int $level, bool $own = false): bool
     {
         $operation = (string) ($access['operation'] ?? '');
-        if ($operation !== '' && class_exists(\OpenSim\Api\Access::class)) {
+        if ($operation !== '' && class_exists(\W4OS\Engine\Api\Access::class)) {
             try {
-                return \OpenSim\Api\Access::allows($level, $operation, $own);
+                return \W4OS\Engine\Api\Access::allows($level, $operation, $own);
             } catch (\InvalidArgumentException) {
                 // An operation of a newer engine than the library: its access as the contract gives it
             }

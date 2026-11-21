@@ -8,8 +8,8 @@ describe('the message once an action is done', function () {
         $contract = new Contract(contract());
         foreach (['avatars', 'regions', 'simulators'] as $type) {
             foreach ($contract->listOf($type)['actions'] as $action) {
-                expect(Done::key($action['name']))->toBe(OpenSim\I18n\Catalog::doneKey($action['name']))
-                    ->and(Done::byRule($action['name']))->toBe(OpenSim\I18n\Catalog::doneKey($action['name']));
+                expect(Done::key($action['name']))->toBe(W4OS\Engine\I18n\Catalog::doneKey($action['name']))
+                    ->and(Done::byRule($action['name']))->toBe(W4OS\Engine\I18n\Catalog::doneKey($action['name']));
             }
         }
     });

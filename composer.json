@@ -1,5 +1,5 @@
 {
-    "name": "magicoli/w4os-views",
+    "name": "w4os/w4os-views",
     "description": "The view models of the w4os bridges: what a list, an item, a form or a card of the engine shows, read from its contract and its answers, for each bridge to render its own way",
     "type": "library",
     "license": "AGPL-3.0-or-later",
@@ -11,7 +11,7 @@
     ],
     "repositories": [
         {
-            "name": "magicoli/opensim-engine",
+            "name": "w4os/w4os-engine",
             "url": "../opensim-engine/",
             "type": "path",
             "options": {
@@ -29,10 +29,10 @@
     "require-dev": {
         "pestphp/pest": "^4.0",
         "magicoli/build-tools": "^0.1.2",
-        "magicoli/opensim-engine": "@dev"
+        "w4os/w4os-engine": "@dev"
     },
     "suggest": {
-        "magicoli/opensim-engine": "the engine's own rules (Access, Catalog) when the bridge bundles it; without it, the same rules read from its contract"
+        "w4os/w4os-engine": "the engine's own rules (Access, Catalog) when the bridge bundles it; without it, the same rules read from its contract"
     },
     "autoload": {
         "psr-4": {

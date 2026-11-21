@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4dda5afee932e642ae52531007ab4bb9",
+    "content-hash": "ab8a84df12d9a955e566ea92e959b5ff",
     "packages": [
         {
             "name": "carbonphp/carbon-doctrine-types",
@@ -1893,94 +1893,6 @@
                 }
             ],
             "time": "2026-10-10T21:55:35+00:00"
-        },
-        {
-            "name": "magicoli/opensim-engine",
-            "version": "dev-charm-dev",
-            "dist": {
-                "type": "path",
-                "url": "../opensim-engine",
-                "reference": "53d63a95d920285a19a0c0e87f88f17dfd60c42f"
-            },
-            "require": {
-                "ext-curl": "*",
-                "ext-filter": "*",
-                "ext-imagick": "*",
-                "ext-intl": "*",
-                "ext-json": "*",
-                "ext-mbstring": "*",
-                "ext-mysqli": "*",
-                "ext-pdo": "*",
-                "ext-posix": "*",
-                "ext-session": "*",
-                "ext-simplexml": "*",
-                "laminas/laminas-escaper": "^2.12@stable",
-                "magicoli/container-tools": "@dev",
-                "magicoli/kick-inside": "^0.1.0",
-                "magicoli/opensim-rest-php": "@dev",
-                "php": ">=8.2",
-                "phpxmlrpc/phpxmlrpc": "^4.11",
-                "platoniq/random-name-generator": "^1.0",
-                "psr/http-factory": "^1.1",
-                "psr/http-message": "^2.0",
-                "psr/http-server-handler": "^1.0",
-                "symfony/yaml": "^7.4"
-            },
-            "require-dev": {
-                "dealerdirect/phpcodesniffer-composer-installer": "^1.2",
-                "magicoli/bash-tools": "^1.0",
-                "magicoli/build-tools": "^0.1.2",
-                "magicoli/pest-failure-summary": "^1.0",
-                "nyholm/psr7": "^1.8",
-                "pestphp/pest": "^3.0",
-                "phpcompatibility/php-compatibility": "dev-develop",
-                "squizlabs/php_codesniffer": "^4.0"
-            },
-            "suggest": {
-                "ext-gettext": "To translate the messages; without it they stay in English",
-                "ezyang/htmlpurifier": "For advanced HTML sanitization if rich content is needed",
-                "nyholm/psr7": "A PSR-7 and PSR-17 implementation to serve the API with Api\\Handler (any other works)"
-            },
-            "bin": [
-                "bin/opensim-api",
-                "bin/opensim-container.php"
-            ],
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "OpenSim\\": "src/"
-                },
-                "files": [
-                    "includes/functions-gettext.php",
-                    "includes/constants.php",
-                    "includes/polyfills.php"
-                ]
-            },
-            "scripts": {
-                "test": [
-                    "pest"
-                ],
-                "docs": [
-                    "php dev/api-docs.php"
-                ],
-                "translations": [
-                    "php dev/translations.php"
-                ]
-            },
-            "license": [
-                "AGPL-3.0-or-later"
-            ],
-            "authors": [
-                {
-                    "name": "Gudule Lapointe",
-                    "email": "gudule@speculoos.world"
-                }
-            ],
-            "description": "OpenSimulator Engine - Framework-agnostic core functionality for OpenSim grids",
-            "transport-options": {
-                "symlink": true,
-                "relative": true
-            }
         },
         {
             "name": "magicoli/opensim-rest-php",
@@ -6044,6 +5956,94 @@
             "time": "2025-12-08T11:19:18+00:00"
         },
         {
+            "name": "w4os/w4os-engine",
+            "version": "dev-charm-dev",
+            "dist": {
+                "type": "path",
+                "url": "../opensim-engine",
+                "reference": "172cfc1111022d443886ba43e796baf2833e0c73"
+            },
+            "require": {
+                "ext-curl": "*",
+                "ext-filter": "*",
+                "ext-imagick": "*",
+                "ext-intl": "*",
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "ext-mysqli": "*",
+                "ext-pdo": "*",
+                "ext-posix": "*",
+                "ext-session": "*",
+                "ext-simplexml": "*",
+                "laminas/laminas-escaper": "^2.12@stable",
+                "magicoli/container-tools": "@dev",
+                "magicoli/kick-inside": "^0.1.0",
+                "magicoli/opensim-rest-php": "@dev",
+                "php": ">=8.2",
+                "phpxmlrpc/phpxmlrpc": "^4.11",
+                "platoniq/random-name-generator": "^1.0",
+                "psr/http-factory": "^1.1",
+                "psr/http-message": "^2.0",
+                "psr/http-server-handler": "^1.0",
+                "symfony/yaml": "^7.4"
+            },
+            "require-dev": {
+                "dealerdirect/phpcodesniffer-composer-installer": "^1.2",
+                "magicoli/bash-tools": "^1.0",
+                "magicoli/build-tools": "^0.2.0",
+                "magicoli/pest-failure-summary": "^1.0",
+                "nyholm/psr7": "^1.8",
+                "pestphp/pest": "^3.0",
+                "phpcompatibility/php-compatibility": "dev-develop",
+                "squizlabs/php_codesniffer": "^4.0"
+            },
+            "suggest": {
+                "ext-gettext": "To translate the messages; without it they stay in English",
+                "ezyang/htmlpurifier": "For advanced HTML sanitization if rich content is needed",
+                "nyholm/psr7": "A PSR-7 and PSR-17 implementation to serve the API with Api\\Handler (any other works)"
+            },
+            "bin": [
+                "bin/w4os-api",
+                "bin/opensim-container.php"
+            ],
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "W4OS\\Engine\\": "src/"
+                },
+                "files": [
+                    "includes/functions-gettext.php",
+                    "includes/constants.php",
+                    "includes/polyfills.php"
+                ]
+            },
+            "scripts": {
+                "test": [
+                    "pest"
+                ],
+                "docs": [
+                    "php dev/api-docs.php"
+                ],
+                "translations": [
+                    "php dev/translations.php"
+                ]
+            },
+            "license": [
+                "AGPL-3.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Gudule Lapointe",
+                    "email": "gudule@speculoos.world"
+                }
+            ],
+            "description": "OpenSimulator Engine - Framework-agnostic core functionality for OpenSim grids",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
             "name": "webmozart/assert",
             "version": "2.5.1",
             "source": {
@@ -6113,7 +6113,7 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "magicoli/opensim-engine": 20
+        "w4os/w4os-engine": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,

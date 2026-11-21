@@ -9,7 +9,7 @@ It gives keys of the engine's catalog, never translated text, and never markup: 
 ## Install
 
 ```bash
-composer require magicoli/w4os-views
+composer require w4os/w4os-views
 ```
 
 PHP 8.3 with `intl`.

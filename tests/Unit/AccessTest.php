@@ -1,6 +1,6 @@
 <?php
 
-use OpenSim\Models\Avatar;
+use W4OS\Engine\Models\Avatar;
 use W4OS\Views\Access;
 use W4OS\Views\Contract;
 
@@ -15,7 +15,7 @@ describe('who may do an operation', function () {
                 $access = $contract->access($method, $path);
                 foreach (array_keys(Avatar::LEVELS) as $level) {
                     foreach ([false, true] as $own) {
-                        $engine = OpenSim\Api\Access::allows($level, $operation['operationId'], $own);
+                        $engine = W4OS\Engine\Api\Access::allows($level, $operation['operationId'], $own);
                         expect(Access::byContract($access, $level, $own))->toBe($engine, "{$operation['operationId']} at $level")
                             ->and(Access::allows($access, $level, $own))->toBe($engine);
                     }

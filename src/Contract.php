@@ -11,7 +11,7 @@ namespace W4OS\Views;
  */
 final class Contract
 {
-    /** @param array<string,mixed> $document the document of the engine (`/openapi.json`, or `OpenSim\Api\Contract::document()`) */
+    /** @param array<string,mixed> $document the document of the engine (`/openapi.json`, or `W4OS\Engine\Api\Contract::document()`) */
     public function __construct(private array $document) {}
 
     /**
@@ -290,8 +290,8 @@ final class Contract
             return ['level' => $level === null ? null : (int) $level, 'self' => (bool) ($operation['x-access']['self'] ?? false)] + $id;
         }
 
-        return (class_exists(\OpenSim\Api\Access::class)
-            ? \OpenSim\Api\Access::of($method, $path, $id['operation'])
+        return (class_exists(\W4OS\Engine\Api\Access::class)
+            ? \W4OS\Engine\Api\Access::of($method, $path, $id['operation'])
             : ['level' => PHP_INT_MAX, 'self' => false]) + $id;
     }
 
@@ -303,7 +303,7 @@ final class Contract
      */
     public function siteAccess(string $name): array
     {
-        $site = $this->document['x-site'] ?? (class_exists(\OpenSim\Api\Access::class) && method_exists(\OpenSim\Api\Access::class, 'site') ? \OpenSim\Api\Access::site() : []);
+        $site = $this->document['x-site'] ?? (class_exists(\W4OS\Engine\Api\Access::class) && method_exists(\W4OS\Engine\Api\Access::class, 'site') ? \W4OS\Engine\Api\Access::site() : []);
         $access = (array) ($site[$name] ?? []);
 
         return isset($access['level']) || array_key_exists('level', $access)

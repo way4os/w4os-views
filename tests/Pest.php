@@ -5,5 +5,5 @@ function contract(): array
 {
     static $document = null;
 
-    return $document ??= OpenSim\Api\Contract::document();
+    return $document ??= W4OS\Engine\Api\Contract::document();
 }
