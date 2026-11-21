@@ -7,15 +7,15 @@ namespace W4OS\Views;
  * for that client), then a small chevron opening a short menu of its other links for that client and "Copy the address".
  *
  * Inline through and through, as a link is: in a sentence, a table cell, a list or a heading, the chevron a suffix of its text
- * (never on a line of its own), the menu laid over the page from it. The card variant ($card) is one link over a whole card
- * ($html: its picture and name), the chevron in a corner of it.
+ * (never on a line of its own), the menu laid over the page from it. Its content may be markup of the caller's ($html: a
+ * picture and a name), where it goes on the page the caller's own style.
  *
  * The links of both clients are written (a page kept in a cache is seen from a browser and from the viewer alike): its script
  * (ASSETS) tells the client from the user agent (data-viewer-pattern) and shows its links, the main one's address too; without it,
  * the client the server told (data-client).
  *
  *     TeleportLink::html(['browser' => $browser, 'viewer' => $viewer], 'Grand Place', 'browser', $texts, $pattern);
- *     TeleportLink::html($links, 'Grand Place', 'browser', $texts, $pattern, '<img src="..." alt=""> Grand Place', true);
+ *     TeleportLink::html($links, 'Grand Place', 'browser', $texts, $pattern, '<img src="..." alt=""> Grand Place');
  *
  * Each link: `format` (its Destination format), `link`, `label` (its text in a menu, translated); the address to copy is the one
  * of format COPY (1024, host:port:Region). $texts: `more` (the label of the button), `copied` (said once copied).
@@ -37,11 +37,10 @@ final class TeleportLink
     /**
      * @param array{browser?: list<array{format:int,link:string,label:string}>, viewer?: list<array{format:int,link:string,label:string}>} $links
      * @param array{more?: string, copied?: string} $texts
-     * @param string|null $html the content of the main link in place of its label, markup the caller has escaped (a card's
-     *                          picture and name)
-     * @param bool $card one link over a whole card, the chevron in its corner
+     * @param string|null $html the content of the main link in place of its label, markup the caller has escaped (a picture and
+     *                          a name)
      */
-    public static function html(array $links, string $label, string $client = 'browser', array $texts = [], string $pattern = '', ?string $html = null, bool $card = false): string
+    public static function html(array $links, string $label, string $client = 'browser', array $texts = [], string $pattern = '', ?string $html = null): string
     {
         $client = in_array($client, self::CLIENTS, true) ? $client : 'browser';
         $content = $html ?? self::e($label);
@@ -77,7 +76,7 @@ final class TeleportLink
         $more = (string) ($texts['more'] ?? '');
 
         // The chevron joined to the text (a word joiner: no line break between them), the menu placed from it
-        return '<span class="w4os-tp'.($card ? ' w4os-tp-card' : '').'" data-w4os-tp data-client="'.$client.'"'.($pattern === '' ? '' : ' data-viewer-pattern="'.self::e($pattern).'"').'>'.$first
+        return '<span class="w4os-tp" data-w4os-tp data-client="'.$client.'"'.($pattern === '' ? '' : ' data-viewer-pattern="'.self::e($pattern).'"').'>'.$first
             .($items === '' ? '' : '&#8288;<span class="w4os-tp-more"><button type="button" class="w4os-tp-toggle" aria-haspopup="true" aria-expanded="false" aria-label="'.self::e($more).'" title="'.self::e($more).'">'.self::CHEVRON.'</button>'
                 .'<span class="w4os-tp-menu" role="menu" hidden>'.$items.'</span></span>')
             .'</span>';

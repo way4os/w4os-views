@@ -2,7 +2,7 @@
 
 ### Unreleased
 
-- new (links): the style and script of a teleport link in the package (TeleportLink::ASSETS), one source for every bridge; the link inline as any link, its menu opened by a chevron joined to its text, a card variant (one link over a whole card, the chevron in its corner)
+- new (links): the style and script of a teleport link in the package (TeleportLink::ASSETS), one source for every bridge; the link inline as any link, its menu opened by a chevron joined to its text, its content markup of the caller's (a picture and a name)
 - change (requirements): PHP 8.2 or later, as the engine and the helpers
 - new (links): TeleportLink, a teleport link that fits where it is seen: the main link of its client, a menu of its other links and the address to copy, the links of both clients written for a page kept in a cache
 - new (links): Link, a link of a site by its kind (plain, more, button, primary), its address built for the page shown (the engine's Url), its text escaped

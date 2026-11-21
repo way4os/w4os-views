@@ -1,7 +1,7 @@
 /* Teleport links (W4OS\Views\TeleportLink): inline as a link is, in a sentence, a table cell, a list or a heading. The chevron a
    suffix of the text, at its size and colour, its hit area wider than it without changing the line; the menu laid over the page
-   from it. The card variant (.w4os-tp-card): one link over the whole card, the chevron in its corner. No colour of its own: the
-   ones of the text, of the page (Canvas) and of the theme. */
+   from it. Where it goes on the page is the caller's style. No colour of its own: the ones of the text, of the page (Canvas) and
+   of the theme. */
 .w4os-tp { display: inline; }
 .w4os-tp-main:not([href]) { color: inherit; text-decoration: none; cursor: default; }
 .w4os-tp-more { position: relative; display: inline; white-space: nowrap; }
@@ -15,9 +15,3 @@
 .w4os-tp-item:hover, .w4os-tp-item:focus { background: color-mix(in srgb, currentColor 8%, transparent); }
 .w4os-tp[data-client="browser"] [data-for="viewer"], .w4os-tp[data-client="viewer"] [data-for="browser"] { display: none; }
 .w4os-tp-address { margin: .3rem .9rem; font: inherit; }
-.w4os-tp-card { position: relative; display: block; }
-.w4os-tp-card > .w4os-tp-main { display: block; }
-.w4os-tp-card > .w4os-tp-more { position: absolute; top: .4rem; right: .4rem; }
-.w4os-tp-card .w4os-tp-toggle { margin: 0; padding: .35rem; border-radius: 50%; background: Canvas; color: CanvasText; box-shadow: 0 .1rem .4rem color-mix(in srgb, CanvasText 25%, transparent); }
-.w4os-tp-card .w4os-tp-toggle:hover, .w4os-tp-card .w4os-tp-toggle:focus-visible, .w4os-tp-card .w4os-tp-toggle[aria-expanded="true"] { background: color-mix(in srgb, CanvasText 10%, Canvas); }
-.w4os-tp-card .w4os-tp-menu { left: auto; right: 0; }

@@ -43,7 +43,7 @@
             const menu = menuOf(tp);
             menu.hidden = !open;
             toggle.setAttribute('aria-expanded', String(open));
-            if (open && !tp.classList.contains('w4os-tp-card')) {
+            if (open) {
                 menu.classList.remove('w4os-tp-menu-end');
                 menu.getBoundingClientRect().right > document.documentElement.clientWidth && menu.classList.add('w4os-tp-menu-end');
             }
