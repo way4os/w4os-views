@@ -79,6 +79,22 @@ describe('a teleport link', function () {
             ->toBe(['go Teleport (hop app)', 'go Teleport', 'map Map (hop app)', 'map Show on the map', 'copy Copy the address']);
     });
 
+    test('puts adding the grid first, its main link with its own icon, a login address its text; alone, its icon without a menu', function () {
+        $grid = ['viewer' => [
+            ['action' => 'teleport', 'format' => 32, 'link' => 'secondlife:///app/teleport/dev-demo.w4os.org:3405', 'label' => 'Teleport'],
+            ['action' => 'copy', 'format' => 1024, 'link' => 'dev-demo.w4os.org:3405', 'label' => 'Copy the address'],
+            ['action' => 'addgrid', 'format' => 4096, 'link' => 'secondlife:///app/gridmanager/add?grid=dev-demo.w4os.org%3A3405', 'label' => 'Add the grid'],
+        ]];
+        $html = without_icons(TeleportLink::html($grid, 'dev-demo.w4os.org:3405', 'viewer'));
+        $alone = without_icons(TeleportLink::html(['viewer' => [['action' => 'addgrid', 'link' => 'secondlife:///app/gridmanager/add?grid=a.org%3A80', 'label' => 'Add the grid']]], 'a.org:80', 'viewer'));
+
+        expect($html)->toContain('<a class="w4os-tp-main" href="secondlife:///app/gridmanager/add?grid=dev-demo.w4os.org%3A3405" data-viewer="secondlife:///app/gridmanager/add?grid=dev-demo.w4os.org%3A3405">dev-demo.w4os.org:3405</a>')
+            ->and(preg_match_all('#\[(add|go|map|copy)\](?:\[done\])?<span class="w4os-tp-label">([^<]+)<#', $html, $items) ? array_map(fn ($icon, $label) => "$icon $label", $items[1], $items[2]) : [])
+            ->toBe(['add Add the grid', 'go Teleport', 'copy Copy the address'])
+            ->and($html)->toContain('class="w4os-tp-item is-default" data-for="viewer" aria-current="true" href="secondlife:///app/gridmanager/add')
+            ->and($alone)->toContain('>a.org:80&#8288;<span class="w4os-tp-go" data-for="viewer">[add]</span></a>')->not->toContain('w4os-tp-toggle');
+    });
+
     test('escapes its text and its addresses; a destination without links is its text alone', function () {
         $odd = ['browser' => [['format' => 8, 'link' => 'hop://a.org:8002/A"B<', 'label' => '<i>hop</i>'], ['format' => 1024, 'link' => 'a.org:8002:A"B<', 'label' => 'Copy']]];
 
