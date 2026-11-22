@@ -1,0 +1,45 @@
+/* Lists of the engine (W4OS\Views\ListHtml): a table of its columns, the ones of a lower priority shown from a width of the list
+   (its container, not the window), its numbers aligned at their end; a list with the detail of the item it selects
+   (ListDetailView): side by side when there is room, the detail held in view beside a long list, below it otherwise. No colour of
+   its own: the ones of the text, of the page and of the theme. */
+.w4os-list-wrap { container: w4os-list / inline-size; overflow-x: auto; }
+.w4os-list { width: 100%; border-collapse: collapse; }
+.w4os-list th, .w4os-list td { padding: .45rem .6rem; border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent); text-align: start; vertical-align: top; }
+.w4os-list thead th { font-weight: 600; white-space: nowrap; }
+.w4os-list thead th a { color: inherit; text-decoration: none; }
+.w4os-list tbody th { font-weight: normal; }
+.w4os-sort-mark { margin-left: .3em; font-size: .75em; }
+.w4os-list .w4os-col-number, .w4os-records .w4os-col-number { text-align: end; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.w4os-list tr.is-selected { background: color-mix(in srgb, currentColor 8%, transparent); }
+.w4os-list tr.is-selected .w4os-row-link { font-weight: 600; }
+.w4os-subtitle { font-size: .875em; opacity: .75; }
+.w4os-folded span + span::before { content: " · "; }
+@container w4os-list (min-width: 36rem) { .w4os-fold-md { display: none; } }
+@container w4os-list (min-width: 58rem) { .w4os-fold-xl { display: none; } }
+@container w4os-list (min-width: 76rem) { .w4os-fold-xxl { display: none; } }
+@container w4os-list (max-width: 36rem) { .w4os-tier-md, .w4os-tier-xl, .w4os-tier-xxl { display: none; } }
+@container w4os-list (max-width: 58rem) { .w4os-tier-xl, .w4os-tier-xxl { display: none; } }
+@container w4os-list (max-width: 76rem) { .w4os-tier-xxl { display: none; } }
+.w4os-pages { display: flex; justify-content: space-between; gap: 1rem; margin-top: .75rem; }
+.w4os-list-empty { margin: 1rem 0; }
+
+.w4os-list-detail { container: w4os-list-detail / inline-size; }
+.w4os-ld { display: grid; gap: 1.5rem; align-items: start; }
+.w4os-detail[hidden] { display: none; }
+@container w4os-list-detail (min-width: 48rem) {
+    .w4os-ld.has-detail { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+    .w4os-ld.has-detail .w4os-detail { position: sticky; top: 1rem; max-height: calc(100vh - 2rem); overflow: auto; }
+}
+.w4os-detail-header { display: flex; align-items: center; gap: .75rem; }
+.w4os-detail-title { margin: 0; }
+.w4os-detail-title:focus { outline: none; }
+.w4os-detail-go { margin: .5rem 0 1rem; }
+.w4os-detail-group { margin: 1.25rem 0 .5rem; }
+.w4os-fields { margin: 0; }
+.w4os-field { display: grid; grid-template-columns: minmax(7rem, max-content) minmax(0, 1fr); gap: .25rem 1rem; padding: .3rem 0; border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent); }
+.w4os-field dt { font-weight: 600; }
+.w4os-field dd { margin: 0; }
+.w4os-field-table { grid-template-columns: minmax(0, 1fr); }
+.w4os-records { width: 100%; border-collapse: collapse; font-size: .95em; }
+.w4os-records th, .w4os-records td { padding: .25rem .5rem; border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent); text-align: start; }
+.w4os-detail-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
