@@ -17,7 +17,7 @@ final class Dates
     /**
      * A date in a style: `date` the medium date (`16 nov. 2026`), `long` with its time (`16 nov. 2026, 10:00`), `full` the long
      * date with its time (the tip of a date), `list` relative while it is recent, else the short date with its time
-     * (`16/11/2026 10:00`).
+     * (`16/11/2026 10:00`), `month` the month and its year in the form of the language (`novembre 2026`, `novembro de 2026`).
      *
      * @param int|string|null $value a timestamp or a date PHP reads
      * @param string $language the language of the page (`fr`, `pt-BR`)
@@ -42,6 +42,11 @@ final class Dates
         $date = $date->setTimezone(new \DateTimeZone(date_default_timezone_get()));
         if (! class_exists(\IntlDateFormatter::class)) {
             return $date->format($style === 'date' ? 'Y-m-d' : 'Y-m-d H:i');
+        }
+        if ($style === 'month') {
+            $pattern = (new \IntlDatePatternGenerator($locale))->getBestPattern('yMMMM');
+
+            return (string) (new \IntlDateFormatter($locale, \IntlDateFormatter::NONE, \IntlDateFormatter::NONE, null, null, $pattern ?: 'MMMM y'))->format($date);
         }
         [$day, $time] = match ($style) {
             'list' => [\IntlDateFormatter::SHORT, \IntlDateFormatter::SHORT],

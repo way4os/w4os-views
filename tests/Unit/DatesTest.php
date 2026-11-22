@@ -25,6 +25,14 @@ describe('a date in the language of the page', function () {
             ->and(Dates::format($time, 'fr', 'full'))->toMatch('~^16 novembre 2026 (à )?\d{2}:\d{2}$~u');
     });
 
+    test('a month and its year, in the form of each language', function () use ($time) {
+        expect(Dates::format($time, 'en', 'month'))->toBe('November 2026')
+            ->and(Dates::format($time, 'fr', 'month'))->toBe('novembre 2026')
+            ->and(Dates::format($time, 'de', 'month'))->toBe('November 2026')
+            ->and(Dates::format($time, 'pt-BR', 'month'))->toBe('novembro de 2026')
+            ->and(Dates::format($time, 'cy', 'month'))->toBe('Tachwedd 2026');
+    });
+
     test('a date PHP reads, nothing for none, the value itself when it is no date', function () {
         expect(Dates::format('2026-11-16T10:00:00Z', 'en'))->toBe('Nov 16, 2026')
             ->and(Dates::format(null, 'fr'))->toBe('')
