@@ -3,11 +3,12 @@
 namespace W4OS\Views;
 
 /**
- * A teleport link that fits where it is seen, the same anywhere a site prints one: its main link (the first the destination gives
- * for that client; adding the grid to the viewer before its teleports, the login address of a grid; or the one of the action the
- * page prefers, a teleport for a visit from another grid), then what else it can do for that client. One thing only: its icon after the text, no menu (the door of a
- * teleport, the map, or the copy button where the address is all there is). More: a chevron opening the menu of all of them, the
- * main link first and marked, each teleport with its door, then "Show on the map", then "Copy the address".
+ * A teleport link that fits where it is seen, the same anywhere a site prints one: its main link (the first link the destination
+ * gives for that client that goes there, adding the grid to the viewer for its login address; or the one of the action the page
+ * prefers, a teleport for a visit from another grid), then what else it can do for that client, the actions the page keeps of
+ * them (`only`). One thing only: its icon after the text, no menu (the door of a teleport, the globe that adds the grid, the map,
+ * or the copy button where the address is all there is). More: a chevron opening the menu of all of them in one order (the
+ * teleports, the maps, "Copy the address", adding the grid last), the main link marked where it stands.
  *
  * Inline through and through, as a link is: in a sentence, a table cell, a list or a heading, the icon a suffix of its text
  * (never on a line of its own), the menu laid over the page from it. Its content may be markup of the caller's ($html: a
@@ -48,97 +49,92 @@ final class TeleportLink
         'done' => '<path d="M5 12l5 5l10 -10"/>',
     ];
 
+    /** The order of a menu by what its links do: the teleports, the maps, the address to copy, adding the grid to the viewer. */
+    private const ORDER = ['teleport' => 0, 'map' => 1, 'copy' => 2, 'addgrid' => 3];
+
+    /** The icon of what a link does. */
+    private const ICON_OF = ['teleport' => 'go', 'addgrid' => 'add', 'map' => 'map', 'copy' => 'copy'];
+
     /**
      * @param array{browser?: list<array{action?:string,format?:int,link:string,label:string}>, viewer?: list<array{action?:string,format?:int,link:string,label:string}>} $links
      * @param array{more?: string, copied?: string} $texts
      * @param string|null $html the content of the main link in place of its label, markup the caller has escaped (a picture and
      *                          a name)
-     * @param string|null $prefer the action its main link does where the destination gives one (teleport: a visit from another
-     *                            grid), the destination's first link otherwise; the others in the destination's order
+     * @param string|null $prefer the action of its main link where the destination gives one (teleport: a visit from another
+     *                            grid; addgrid: a link that adds the grid), else the first link that goes there; marked in its
+     *                            menu where it stands
+     * @param list<string>|null $only the actions it keeps (copy alone: the address to paste in a map), all of them when null
      */
-    public static function html(array $links, string $label, string $client = 'browser', array $texts = [], string $pattern = '', ?string $html = null, ?string $prefer = null): string
+    public static function html(array $links, string $label, string $client = 'browser', array $texts = [], string $pattern = '', ?string $html = null, ?string $prefer = null, ?array $only = null): string
     {
         $client = in_array($client, self::CLIENTS, true) ? $client : 'browser';
         $content = $html ?? self::e($label);
-        // What each client goes by (adding the grid to the viewer first, then its teleports), its map and its address to copy
-        $go = $add = $map = $copy = [];
+        // What each client may do, the actions kept, one address to copy; its main link; its menu in one order whatever it is
+        $items = $main = [];
         foreach (self::CLIENTS as $for) {
+            $own = [];
             foreach ((array) ($links[$for] ?? []) as $link) {
                 if (! is_array($link) || (string) ($link['link'] ?? '') === '') {
                     continue;
                 }
-                $action = self::action($link);
-                if ($action === 'copy') {
-                    $copy[$for] ??= $link;
-                } elseif ($action === 'map') {
-                    $map[$for][] = $link;
-                } elseif ($action === 'addgrid') {
-                    $add[$for][] = ['icon' => 'add', 'does' => $action] + $link;
-                } else {
-                    $go[$for][] = ['icon' => 'go', 'does' => $action] + $link;
+                $does = self::action($link);
+                if (($only !== null && ! in_array($does, $only, true)) || ($does === 'copy' && in_array('copy', array_column($own, 'does'), true))) {
+                    continue;
                 }
+                $own[] = ['does' => $does] + $link;
             }
-            isset($add[$for]) && $go[$for] = [...$add[$for], ...($go[$for] ?? [])];
-            // The main link the page prefers, where there is one: first, the others as they were
-            foreach ($prefer === null ? [] : ($go[$for] ?? []) as $at => $link) {
-                if ($link['does'] === $prefer) {
-                    array_splice($go[$for], $at, 1);
-                    array_unshift($go[$for], $link);
-                    break;
-                }
-            }
+            $goes = array_values(array_filter($own, fn (array $link) => in_array($link['does'], ['teleport', 'addgrid'], true)));
+            $chosen = array_values(array_filter($goes, fn (array $link) => $link['does'] === $prefer))[0] ?? $goes[0] ?? null;
+            $chosen === null || $main[$for] = $chosen;
+            usort($own, fn (array $a, array $b) => self::ORDER[$a['does']] <=> self::ORDER[$b['does']]);
+            $own === [] || $items[$for] = $own;
         }
-        $count = fn (string $for) => count($go[$for] ?? []) + count($map[$for] ?? []) + (isset($copy[$for]) ? 1 : 0);
-        if ($count('browser') + $count('viewer') === 0) {
+        if ($items === []) {
             return $content;
         }
-        // Who has one thing only (a teleport, the map, or the address), who a menu
-        $only = fn (string $kind) => array_values(array_filter(self::CLIENTS, fn ($for) => $count($for) === 1 && isset(['go' => $go, 'map' => $map, 'copy' => $copy][$kind][$for])));
-        $menu = array_values(array_filter(self::CLIENTS, fn ($for) => $count($for) > 1));
+        // Who has one thing only (its icon, no menu), who a menu
+        $alone = fn (array $actions) => array_values(array_filter(self::CLIENTS, fn ($for) => count($items[$for] ?? []) === 1 && in_array($items[$for][0]['does'], $actions, true)));
+        $menu = array_values(array_filter(self::CLIENTS, fn ($for) => count($items[$for] ?? []) > 1));
 
         // The main link of the client told, none where that client has none (a grid alone in a browser): the text, the script giving
         // it the address of the client it finds
-        $main = array_map(fn (array $list) => (string) $list[0]['link'], $go);
-        $href = $main[$client] ?? '';
-        $door = '';
-        foreach ($only('go') as $for) {
-            $door .= '&#8288;<span class="w4os-tp-go" data-for="'.$for.'">'.self::icon((string) $go[$for][0]['icon']).'</span>';
+        $href = (string) ($main[$client]['link'] ?? '');
+        $icons = [];
+        foreach ($alone(['teleport', 'addgrid']) as $for) {
+            $icons[$for] = self::ICON_OF[$items[$for][0]['does']];
         }
-        count($only('go')) === count(self::CLIENTS) && $go['browser'][0]['icon'] === $go['viewer'][0]['icon']
-            && $door = '&#8288;<span class="w4os-tp-go">'.self::icon((string) $go['browser'][0]['icon']).'</span>';
+        $door = count($icons) === count(self::CLIENTS) && count(array_unique($icons)) === 1
+            ? '&#8288;<span class="w4os-tp-go">'.self::icon((string) reset($icons)).'</span>'
+            : implode('', array_map(fn ($for, $icon) => '&#8288;<span class="w4os-tp-go" data-for="'.$for.'">'.self::icon($icon).'</span>', array_keys($icons), $icons));
         $out = $main === []
             ? '<span class="w4os-tp-main">'.$content.'</span>'
-            : '<a class="w4os-tp-main"'.($href === '' ? '' : ' href="'.self::e($href).'"').self::data('browser', $main['browser'] ?? '').self::data('viewer', $main['viewer'] ?? '').'>'.$content.$door.'</a>';
-        foreach ($only('map') as $for) {
-            $label = self::e((string) ($map[$for][0]['label'] ?? ''));
-            $out .= '&#8288;<a class="w4os-tp-action w4os-tp-map" data-for="'.$for.'" href="'.self::e((string) $map[$for][0]['link']).'" aria-label="'.$label.'" title="'.$label.'">'.self::icon('map').'</a>';
+            : '<a class="w4os-tp-main"'.($href === '' ? '' : ' href="'.self::e($href).'"').self::data('browser', (string) ($main['browser']['link'] ?? '')).self::data('viewer', (string) ($main['viewer']['link'] ?? '')).'>'.$content.$door.'</a>';
+        foreach ($alone(['map']) as $for) {
+            $label = self::e((string) ($items[$for][0]['label'] ?? ''));
+            $out .= '&#8288;<a class="w4os-tp-action w4os-tp-map" data-for="'.$for.'" href="'.self::e((string) $items[$for][0]['link']).'" aria-label="'.$label.'" title="'.$label.'">'.self::icon('map').'</a>';
         }
-        if ($only('copy') !== []) {
-            $first = $copy[$only('copy')[0]];
-            $out .= '&#8288;<button type="button" class="w4os-tp-action w4os-tp-copy"'.self::scope($only('copy')).self::copyData($first, $texts).' aria-label="'.self::e((string) ($first['label'] ?? '')).'" title="'.self::e((string) ($first['label'] ?? '')).'">'.self::icon('copy').self::icon('done').'</button>';
+        $copiers = $alone(['copy']);
+        if ($copiers !== []) {
+            $first = $items[$copiers[0]][0];
+            $out .= '&#8288;<button type="button" class="w4os-tp-action w4os-tp-copy"'.self::scope($copiers).self::copyData($first, $texts).' aria-label="'.self::e((string) ($first['label'] ?? '')).'" title="'.self::e((string) ($first['label'] ?? '')).'">'.self::icon('copy').self::icon('done').'</button>';
         }
         if ($menu !== []) {
-            // Everything the client goes by, its main one first and marked (adding the grid, then its teleports), then its map, then
-            // its address to copy
-            $items = '';
+            // Everything the client may do, in the one order, its main link marked where it stands
+            $list = '';
             foreach ($menu as $for) {
-                foreach ($go[$for] ?? [] as $at => $link) {
-                    $items .= '<a role="menuitem" class="w4os-tp-item'.($at === 0 ? ' is-default' : '').'" data-for="'.$for.'"'.($at === 0 ? ' aria-current="true"' : '').' href="'.self::e((string) $link['link']).'">'.self::icon((string) $link['icon']).'<span class="w4os-tp-label">'.self::e((string) ($link['label'] ?? '')).'</span></a>';
+                foreach ($items[$for] as $link) {
+                    $text = '<span class="w4os-tp-label">'.self::e((string) ($link['label'] ?? '')).'</span>';
+                    if ($link['does'] === 'copy') {
+                        $list .= '<button type="button" role="menuitem" class="w4os-tp-item w4os-tp-copy" data-for="'.$for.'"'.self::copyData($link, $texts).'>'.self::icon('copy').self::icon('done').$text.'</button>';
+                        continue;
+                    }
+                    $chosen = isset($main[$for]) && $main[$for]['link'] === $link['link'] && $main[$for]['does'] === $link['does'];
+                    $list .= '<a role="menuitem" class="w4os-tp-item'.($link['does'] === 'map' ? ' w4os-tp-map' : '').($chosen ? ' is-default' : '').'" data-for="'.$for.'"'.($chosen ? ' aria-current="true"' : '').' href="'.self::e((string) $link['link']).'">'.self::icon(self::ICON_OF[$link['does']]).$text.'</a>';
                 }
-            }
-            foreach ($menu as $for) {
-                foreach ($map[$for] ?? [] as $link) {
-                    $items .= '<a role="menuitem" class="w4os-tp-item w4os-tp-map" data-for="'.$for.'" href="'.self::e((string) $link['link']).'">'.self::icon('map').'<span class="w4os-tp-label">'.self::e((string) ($link['label'] ?? '')).'</span></a>';
-                }
-            }
-            $copiers = array_values(array_filter($menu, fn ($for) => isset($copy[$for])));
-            if ($copiers !== []) {
-                $first = $copy[$copiers[0]];
-                $items .= '<button type="button" role="menuitem" class="w4os-tp-item w4os-tp-copy"'.self::scope($copiers).self::copyData($first, $texts).'>'.self::icon('copy').self::icon('done').'<span class="w4os-tp-label">'.self::e((string) ($first['label'] ?? '')).'</span></button>';
             }
             $more = (string) ($texts['more'] ?? '');
             $out .= '&#8288;<span class="w4os-tp-more"'.self::scope($menu).'><button type="button" class="w4os-tp-toggle" aria-haspopup="true" aria-expanded="false" aria-label="'.self::e($more).'" title="'.self::e($more).'">'.self::icon('more').'</button>'
-                .'<span class="w4os-tp-menu" role="menu" hidden>'.$items.'</span></span>';
+                .'<span class="w4os-tp-menu" role="menu" hidden>'.$list.'</span></span>';
         }
 
         return '<span class="w4os-tp" data-w4os-tp data-client="'.$client.'"'.($pattern === '' ? '' : ' data-viewer-pattern="'.self::e($pattern).'"').'>'.$out.'</span>';

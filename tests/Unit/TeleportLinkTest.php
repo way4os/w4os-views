@@ -27,6 +27,12 @@ function without_icons(string $html): string
     return (string) preg_replace('#<svg class="w4os-tp-icon w4os-tp-icon-([a-z]+)"[^>]*>.*?</svg>#', '[$1]', $html);
 }
 
+/** The items of a teleport link's menu as their icon and their text, in their order. */
+function tp_items(string $html): array
+{
+    return preg_match_all('#\[(add|go|map|copy)\](?:\[done\])?<span class="w4os-tp-label">([^<]+)<#', $html, $items) ? array_map(fn ($icon, $label) => "$icon $label", $items[1], $items[2]) : [];
+}
+
 describe('a teleport link', function () {
     test('has the main link of the client it is seen from, and a menu of all its links, the main one first and marked, then the address to copy', function () {
         $browser = without_icons(TeleportLink::html(grand_place(), 'Grand Place', 'browser', ['more' => 'More ways to go there', 'copied' => 'Copied'], 'Firestorm|SecondLife'));
@@ -37,9 +43,9 @@ describe('a teleport link', function () {
             // Its main link in the menu too, never hidden, each teleport with its door
             ->and($browser)->toContain('<a role="menuitem" class="w4os-tp-item is-default" data-for="browser" aria-current="true" href="secondlife://speculoos.world:8002/secondlife/Grand%20Place/128/128/21">[go]<span class="w4os-tp-label">secondlife:// link</span></a><a role="menuitem" class="w4os-tp-item" data-for="browser" href="hop://speculoos.world:8002/Grand%20Place/128/128/21">[go]<span class="w4os-tp-label">hop:// link</span></a>')
             ->and($browser)->toContain('<a role="menuitem" class="w4os-tp-item is-default" data-for="viewer" aria-current="true" href="secondlife:///app/teleport/speculoos.world:8002:Grand%20Place/128/128/21">[go]<span class="w4os-tp-label">Teleport in the viewer</span></a>')
-            ->and($browser)->toContain('<button type="button" role="menuitem" class="w4os-tp-item w4os-tp-copy" data-w4os-tp-copy="speculoos.world:8002:Grand Place/128/128/21" data-copied="Copied">[copy][done]<span class="w4os-tp-label">Copy the address</span></button></span></span></span>')
+            ->and($browser)->toContain('<button type="button" role="menuitem" class="w4os-tp-item w4os-tp-copy" data-for="browser" data-w4os-tp-copy="speculoos.world:8002:Grand Place/128/128/21" data-copied="Copied">[copy][done]<span class="w4os-tp-label">Copy the address</span></button>', 'data-for="viewer" data-w4os-tp-copy="speculoos.world:8002:Grand Place/128/128/21" data-copied="Copied">[copy][done]<span class="w4os-tp-label">Copy the address</span></button></span></span></span>')
             ->and($browser)->toContain('<span class="w4os-tp-more"><button type="button" class="w4os-tp-toggle" aria-haspopup="true" aria-expanded="false" aria-label="More ways to go there" title="More ways to go there">[more]</button><span class="w4os-tp-menu" role="menu" hidden>')
-            ->and(substr_count($browser, 'w4os-tp-copy"'))->toBe(1)
+            ->and(substr_count($browser, 'class="w4os-tp-item w4os-tp-copy" data-for="browser"'))->toBe(1)
             ->and($browser)->not->toContain('w4os-tp-action', 'w4os-tp-go"')
             // Seen from the viewer: its own main link
             ->and($viewer)->toContain('data-client="viewer"', '<a class="w4os-tp-main" href="secondlife:///app/teleport/speculoos.world:8002:Grand%20Place/128/128/21"');
@@ -79,38 +85,53 @@ describe('a teleport link', function () {
             ->toBe(['go Teleport (hop app)', 'go Teleport', 'map Map (hop app)', 'map Show on the map', 'copy Copy the address']);
     });
 
-    test('puts adding the grid first, its main link with its own icon, a login address its text; alone, its icon without a menu', function () {
+    test('lists its links in one order (teleports, maps, the address to copy, adding the grid last), its main one marked where it stands', function () {
         $grid = ['viewer' => [
+            ['action' => 'addgrid', 'format' => 4096, 'link' => 'secondlife:///app/gridmanager/addgrid/dev-demo.w4os.org%3A3405', 'label' => 'Add the grid'],
             ['action' => 'teleport', 'format' => 32, 'link' => 'secondlife:///app/teleport/dev-demo.w4os.org:3405', 'label' => 'Teleport'],
             ['action' => 'copy', 'format' => 1024, 'link' => 'dev-demo.w4os.org:3405', 'label' => 'Copy the address'],
-            ['action' => 'addgrid', 'format' => 4096, 'link' => 'secondlife:///app/gridmanager/add?grid=dev-demo.w4os.org%3A3405', 'label' => 'Add the grid'],
+            ['action' => 'map', 'format' => 64, 'link' => 'secondlife:///app/worldmap/dev-demo.w4os.org:3405', 'label' => 'Show on the map'],
         ]];
         $html = without_icons(TeleportLink::html($grid, 'dev-demo.w4os.org:3405', 'viewer'));
-        $alone = without_icons(TeleportLink::html(['viewer' => [['action' => 'addgrid', 'link' => 'secondlife:///app/gridmanager/add?grid=a.org%3A80', 'label' => 'Add the grid']]], 'a.org:80', 'viewer'));
 
-        expect($html)->toContain('<a class="w4os-tp-main" href="secondlife:///app/gridmanager/add?grid=dev-demo.w4os.org%3A3405" data-viewer="secondlife:///app/gridmanager/add?grid=dev-demo.w4os.org%3A3405">dev-demo.w4os.org:3405</a>')
-            ->and(preg_match_all('#\[(add|go|map|copy)\](?:\[done\])?<span class="w4os-tp-label">([^<]+)<#', $html, $items) ? array_map(fn ($icon, $label) => "$icon $label", $items[1], $items[2]) : [])
-            ->toBe(['add Add the grid', 'go Teleport', 'copy Copy the address'])
-            ->and($html)->toContain('class="w4os-tp-item is-default" data-for="viewer" aria-current="true" href="secondlife:///app/gridmanager/add')
-            ->and($alone)->toContain('>a.org:80&#8288;<span class="w4os-tp-go" data-for="viewer">[add]</span></a>')->not->toContain('w4os-tp-toggle');
+        // Its main link the destination's first that goes there (adding the grid, for a login address), marked at its place, last
+        expect($html)->toContain('<a class="w4os-tp-main" href="secondlife:///app/gridmanager/addgrid/dev-demo.w4os.org%3A3405" data-viewer="secondlife:///app/gridmanager/addgrid/dev-demo.w4os.org%3A3405">dev-demo.w4os.org:3405</a>')
+            ->and(tp_items($html))->toBe(['go Teleport', 'map Show on the map', 'copy Copy the address', 'add Add the grid'])
+            ->and($html)->toContain('class="w4os-tp-item is-default" data-for="viewer" aria-current="true" href="secondlife:///app/gridmanager/addgrid/')
+            ->and(substr_count($html, 'is-default'))->toBe(1);
     });
 
-    test('makes the link of the action a page prefers its main one, the others in the order the destination gives; its first without it', function () {
+    test('takes for its main link the action a page prefers, its menu in the same order; the destination\'s first without it', function () {
         $grid = ['browser' => [
             ['action' => 'addgrid', 'link' => 'hop:///app/gridmanager/addgrid/a.org%3A80', 'label' => 'Add the grid'],
             ['action' => 'teleport', 'link' => 'hop://a.org:80/', 'label' => 'Teleport (hop://)'],
             ['action' => 'teleport', 'link' => 'secondlife://a.org:80/secondlife/', 'label' => 'Teleport (secondlife://)'],
             ['action' => 'copy', 'link' => 'a.org:80', 'label' => 'Copy the address'],
         ]];
-        $labels = fn (string $html) => preg_match_all('#<span class="w4os-tp-label">([^<]+)<#', $html, $m) ? $m[1] : [];
         $visit = without_icons(TeleportLink::html($grid, 'Go', 'browser', [], '', null, 'teleport'));
 
-        expect($visit)->toContain('<a class="w4os-tp-main" href="hop://a.org:80/"')
-            ->and($labels($visit))->toBe(['Teleport (hop://)', 'Add the grid', 'Teleport (secondlife://)', 'Copy the address'])
-            ->and($visit)->toContain('class="w4os-tp-item is-default" data-for="browser" aria-current="true" href="hop://a.org:80/"')
-            // Not given, or given an action the destination has not: its own order
-            ->and($labels(TeleportLink::html($grid, 'Go')))->toBe(['Add the grid', 'Teleport (hop://)', 'Teleport (secondlife://)', 'Copy the address'])
+        expect($visit)->toContain('<a class="w4os-tp-main" href="hop://a.org:80/"', 'class="w4os-tp-item is-default" data-for="browser" aria-current="true" href="hop://a.org:80/"')
+            ->and(tp_items($visit))->toBe(['go Teleport (hop://)', 'go Teleport (secondlife://)', 'copy Copy the address', 'add Add the grid'])
+            ->and(tp_items(without_icons(TeleportLink::html($grid, 'Go'))))->toBe(tp_items($visit))
+            ->and(TeleportLink::html($grid, 'Go'))->toContain('<a class="w4os-tp-main" href="hop:///app/gridmanager/addgrid/a.org%3A80"')
+            // An action the destination has not: its first that goes there
             ->and(TeleportLink::html(['browser' => [$grid['browser'][0], $grid['browser'][3]]], 'Go', 'browser', [], '', null, 'teleport'))->toContain('<a class="w4os-tp-main" href="hop:///app/gridmanager/addgrid/a.org%3A80"');
+    });
+
+    test('keeps only the actions a page asks: one left, its icon without a menu (the address to copy alone, the text not a link)', function () {
+        $grid = ['browser' => [
+            ['action' => 'addgrid', 'link' => 'hop:///app/gridmanager/addgrid/a.org%3A80', 'label' => 'Add the grid'],
+            ['action' => 'teleport', 'link' => 'hop://a.org:80/', 'label' => 'Teleport (hop://)'],
+            ['action' => 'copy', 'link' => 'a.org:80', 'label' => 'Copy the address'],
+        ]];
+        $add = without_icons(TeleportLink::html($grid, 'a.org:80', 'browser', [], '', null, 'addgrid', ['addgrid', 'copy']));
+        $copy = without_icons(TeleportLink::html($grid, 'a.org:80', 'browser', ['copied' => 'Copied'], '', null, null, ['copy']));
+        $go = without_icons(TeleportLink::html($grid, 'Go', 'browser', [], '', null, 'teleport', ['teleport', 'map']));
+
+        expect(tp_items($add))->toBe(['copy Copy the address', 'add Add the grid'])
+            ->and($add)->toContain('<a class="w4os-tp-main" href="hop:///app/gridmanager/addgrid/a.org%3A80"')->not->toContain('Teleport')
+            ->and($copy)->toBe('<span class="w4os-tp" data-w4os-tp data-client="browser"><span class="w4os-tp-main">a.org:80</span>&#8288;<button type="button" class="w4os-tp-action w4os-tp-copy" data-for="browser" data-w4os-tp-copy="a.org:80" data-copied="Copied" aria-label="Copy the address" title="Copy the address">[copy][done]</button></span>')
+            ->and($go)->toContain('>Go&#8288;<span class="w4os-tp-go" data-for="browser">[go]</span></a>')->not->toContain('w4os-tp-toggle', 'addgrid', 'w4os-tp-copy');
     });
 
     test('escapes its text and its addresses; a destination without links is its text alone', function () {
