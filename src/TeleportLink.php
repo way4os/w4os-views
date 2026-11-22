@@ -4,7 +4,8 @@ namespace W4OS\Views;
 
 /**
  * A teleport link that fits where it is seen, the same anywhere a site prints one: its main link (the first the destination gives
- * for that client; adding the grid to the viewer before its teleports, the login address of a grid), then what else it can do for that client. One thing only: its icon after the text, no menu (the door of a
+ * for that client; adding the grid to the viewer before its teleports, the login address of a grid; or the one of the action the
+ * page prefers, a teleport for a visit from another grid), then what else it can do for that client. One thing only: its icon after the text, no menu (the door of a
  * teleport, the map, or the copy button where the address is all there is). More: a chevron opening the menu of all of them, the
  * main link first and marked, each teleport with its door, then "Show on the map", then "Copy the address".
  *
@@ -52,8 +53,10 @@ final class TeleportLink
      * @param array{more?: string, copied?: string} $texts
      * @param string|null $html the content of the main link in place of its label, markup the caller has escaped (a picture and
      *                          a name)
+     * @param string|null $prefer the action its main link does where the destination gives one (teleport: a visit from another
+     *                            grid), the destination's first link otherwise; the others in the destination's order
      */
-    public static function html(array $links, string $label, string $client = 'browser', array $texts = [], string $pattern = '', ?string $html = null): string
+    public static function html(array $links, string $label, string $client = 'browser', array $texts = [], string $pattern = '', ?string $html = null, ?string $prefer = null): string
     {
         $client = in_array($client, self::CLIENTS, true) ? $client : 'browser';
         $content = $html ?? self::e($label);
@@ -70,12 +73,20 @@ final class TeleportLink
                 } elseif ($action === 'map') {
                     $map[$for][] = $link;
                 } elseif ($action === 'addgrid') {
-                    $add[$for][] = ['icon' => 'add'] + $link;
+                    $add[$for][] = ['icon' => 'add', 'does' => $action] + $link;
                 } else {
-                    $go[$for][] = ['icon' => 'go'] + $link;
+                    $go[$for][] = ['icon' => 'go', 'does' => $action] + $link;
                 }
             }
             isset($add[$for]) && $go[$for] = [...$add[$for], ...($go[$for] ?? [])];
+            // The main link the page prefers, where there is one: first, the others as they were
+            foreach ($prefer === null ? [] : ($go[$for] ?? []) as $at => $link) {
+                if ($link['does'] === $prefer) {
+                    array_splice($go[$for], $at, 1);
+                    array_unshift($go[$for], $link);
+                    break;
+                }
+            }
         }
         $count = fn (string $for) => count($go[$for] ?? []) + count($map[$for] ?? []) + (isset($copy[$for]) ? 1 : 0);
         if ($count('browser') + $count('viewer') === 0) {

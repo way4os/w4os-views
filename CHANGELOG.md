@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- new (links): the main link of a teleport link the one of the action a page prefers (`prefer`: teleport for a visit from another grid), the others in the destination's order
 - new (links): adding the grid to the viewer (action addgrid) in a teleport link, first, with its icon (Tabler world-plus): the login address of a grid
 - new (lists): ListHtml, the neutral HTML of a list (its sorts and pages keeping the whole query, its numbers with their decimals, the values a narrow list hides under the name, a text of no rows only when asked) and of an item (its teleport link, its fields, a small table of records); ListDetailView, a list with the detail of the item it selects beside it (below when narrow), its style and script (ListDetailView::ASSETS)
 - new (links): W4OSTeleportLinks.setup(), the teleport links a page adds after its load

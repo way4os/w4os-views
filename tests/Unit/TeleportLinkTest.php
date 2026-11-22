@@ -95,6 +95,24 @@ describe('a teleport link', function () {
             ->and($alone)->toContain('>a.org:80&#8288;<span class="w4os-tp-go" data-for="viewer">[add]</span></a>')->not->toContain('w4os-tp-toggle');
     });
 
+    test('makes the link of the action a page prefers its main one, the others in the order the destination gives; its first without it', function () {
+        $grid = ['browser' => [
+            ['action' => 'addgrid', 'link' => 'hop:///app/gridmanager/addgrid/a.org%3A80', 'label' => 'Add the grid'],
+            ['action' => 'teleport', 'link' => 'hop://a.org:80/', 'label' => 'Teleport (hop://)'],
+            ['action' => 'teleport', 'link' => 'secondlife://a.org:80/secondlife/', 'label' => 'Teleport (secondlife://)'],
+            ['action' => 'copy', 'link' => 'a.org:80', 'label' => 'Copy the address'],
+        ]];
+        $labels = fn (string $html) => preg_match_all('#<span class="w4os-tp-label">([^<]+)<#', $html, $m) ? $m[1] : [];
+        $visit = without_icons(TeleportLink::html($grid, 'Go', 'browser', [], '', null, 'teleport'));
+
+        expect($visit)->toContain('<a class="w4os-tp-main" href="hop://a.org:80/"')
+            ->and($labels($visit))->toBe(['Teleport (hop://)', 'Add the grid', 'Teleport (secondlife://)', 'Copy the address'])
+            ->and($visit)->toContain('class="w4os-tp-item is-default" data-for="browser" aria-current="true" href="hop://a.org:80/"')
+            // Not given, or given an action the destination has not: its own order
+            ->and($labels(TeleportLink::html($grid, 'Go')))->toBe(['Add the grid', 'Teleport (hop://)', 'Teleport (secondlife://)', 'Copy the address'])
+            ->and(TeleportLink::html(['browser' => [$grid['browser'][0], $grid['browser'][3]]], 'Go', 'browser', [], '', null, 'teleport'))->toContain('<a class="w4os-tp-main" href="hop:///app/gridmanager/addgrid/a.org%3A80"');
+    });
+
     test('escapes its text and its addresses; a destination without links is its text alone', function () {
         $odd = ['browser' => [['format' => 8, 'link' => 'hop://a.org:8002/A"B<', 'label' => '<i>hop</i>'], ['format' => 1024, 'link' => 'a.org:8002:A"B<', 'label' => 'Copy']]];
 
