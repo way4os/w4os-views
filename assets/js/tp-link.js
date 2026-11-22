@@ -3,7 +3,8 @@
 // reached with the arrows; the address copied (its button saying so for a while), or shown selected where the browser gives no
 // clipboard.
 (() => {
-    document.querySelectorAll('[data-w4os-tp]').forEach((tp) => {
+    // The links of a part of the page: all of them at its load, the ones a page adds later when it calls it (W4OSTeleportLinks.setup)
+    const setup = (root = document) => root.querySelectorAll('[data-w4os-tp]').forEach((tp) => {
         let client = tp.dataset.client;
         try {
             client = tp.dataset.viewerPattern && new RegExp(tp.dataset.viewerPattern, 'i').test(navigator.userAgent) ? 'viewer' : 'browser';
@@ -15,6 +16,8 @@
             main.dataset[client] ? main.setAttribute('href', main.dataset[client]) : main.removeAttribute('href');
         }
     });
+    setup();
+    window.W4OSTeleportLinks = { setup };
     const menuOf = (tp) => tp.querySelector('.w4os-tp-menu');
     const items = (tp) => [...tp.querySelectorAll('.w4os-tp-item, .w4os-tp-address')].filter((item) => item.offsetParent !== null);
     const close = (tp) => {

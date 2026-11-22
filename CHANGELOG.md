@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- new (links): W4OSTeleportLinks.setup(), the teleport links a page adds after its load
 - change (links): what a link of a teleport link does told by its action (teleport, map, copy), its format only for an engine before actions; every map of a place in the menu
 - new (links): the map of a place in the menu of a teleport link (format MAP), between its teleports and the address to copy, its icon alone when it is all a client has
 - change (links): the menu of a teleport link lists all its links, the main one first and marked, each with a door (Tabler door-enter); one action only is its icon alone, without a menu (the door, or the copy button)
