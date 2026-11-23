@@ -19,6 +19,17 @@ describe('a date in the language of the page', function () {
             ->and(Dates::RECENT)->toBe(7 * 86400);
     });
 
+    test('a date, never relative, where the host carries translation contracts Carbon cannot load beside (Grav 1.7)', function () use ($time) {
+        // The interface of symfony/contracts 1, declared first as Grav 1.7's autoloader gives it, in a PHP of its own
+        $script = 'namespace Symfony\\Contracts\\Translation; interface TranslatorInterface { public function trans($id, array $parameters = [], $domain = null, $locale = null); }'
+            .' require '.var_export(dirname(__DIR__, 2).'/vendor/autoload.php', true).';'
+            .' echo \\W4OS\\Views\\Dates::canTellRelative() ? "relative" : "date", "|", \\W4OS\\Views\\Dates::format('.$time.', "fr", "list", '.($time + 15 * 3600).');';
+        exec(escapeshellarg(PHP_BINARY).' -r '.escapeshellarg($script).' 2>&1', $output);
+
+        expect(Dates::canTellRelative())->toBeTrue()
+            ->and(implode("\n", $output))->toStartWith('date|')->not->toContain('il y a')->toMatch('~^date\|\d{2}/\d{2}/\d{4} \d{2}:\d{2}$~');
+    });
+
     test('a medium date, with its time or its long form', function () use ($time) {
         expect(Dates::format($time, 'en'))->toBe('Nov 16, 2026')
             ->and(Dates::format($time, 'fr', 'long'))->toMatch('~^16 nov\. 2026, \d{2}:\d{2}$~')

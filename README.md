@@ -4,7 +4,7 @@ The view models of the w4os bridges. The engine of an OpenSimulator grid describ
 
 It has no framework of its own and works from the contract alone, so a bridge that talks to a remote engine shows the same thing as one that bundles it. When the engine's library is there, its own rules answer (who may do an operation, the message once an action is done); without it, the same rules are read from the contract.
 
-It gives keys of the engine's catalog, never translated text, and never markup: the bridge translates with its own language files and draws with its own templates. Dates are the exception: they come in the language of the page, relative while recent.
+It gives keys of the engine's catalog, never translated text, and never markup: the bridge translates with its own language files and draws with its own templates. Dates are the exception: they come in the language of the page, relative while recent where the host lets Carbon tell them (`Dates::canTellRelative()`: not beside the older translation contracts of Grav 1.7, where a recent date reads as a date).
 
 ## Install
 
