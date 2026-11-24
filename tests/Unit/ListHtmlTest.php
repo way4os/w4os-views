@@ -143,6 +143,14 @@ describe('a list with the detail of the item it selects', function () {
             ->and(substr_count($html, 'aaaa.jpg'))->toBe(1);
     });
 
+    test('shows no picture of a place without one in its detail: never an empty frame', function () use ($item) {
+        $list = ['type' => 'land', 'columns' => [['name' => 'name', 'label' => 'column_name', 'type' => 'text', 'picture' => 'picture', 'default' => 'place']]];
+        $view = ListDetailView::of(ListView::of($list, [], [], ['id' => 'p2']), ['picture' => null] + $item, []);
+        $html = ListHtml::item($view->detail, ['t' => bracketed(), 'picture' => fn (?string $picture, ?string $default, string $name) => '<img src="/'.($picture ?? 'none').'.jpg">']);
+
+        expect($html)->not->toContain('w4os-detail-picture')->not->toContain('<img');
+    });
+
     test('leaves the pictures out of the rows when the page asks it, the detail keeping its own, its height capped', function () use ($item) {
         $list = ['type' => 'land', 'columns' => [['name' => 'name', 'label' => 'column_name', 'type' => 'text', 'picture' => 'picture', 'default' => 'place']]];
         $rows = [['uuid' => 'p1', 'name' => 'Sea view', 'picture' => 'bbbb'], ['uuid' => 'p2', 'name' => 'Hill', 'picture' => 'aaaa']];
