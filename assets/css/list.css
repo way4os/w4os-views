@@ -12,6 +12,16 @@
 .w4os-list .w4os-col-number, .w4os-records .w4os-col-number { text-align: end; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .w4os-list tr.is-selected { background: color-mix(in srgb, currentColor 8%, transparent); }
 .w4os-list tr.is-selected .w4os-row-link { font-weight: 600; }
+/* A list with its detail is a list of tabs: the whole row selects its result, by its link stretched over it (its address kept for
+   Back and a shared link), which reads as text; a hover, the keyboard focus and the selected row on the row */
+.w4os-list-detail .w4os-list tbody tr { position: relative; cursor: pointer; }
+.w4os-list-detail .w4os-row-link { color: inherit; text-decoration: none; }
+.w4os-list-detail .w4os-row-link::after { content: ""; position: absolute; inset: 0; }
+.w4os-list-detail .w4os-list tbody tr :is(a:not(.w4os-row-link), button) { position: relative; z-index: 1; }
+.w4os-list-detail .w4os-row-link:focus-visible { outline: none; }
+.w4os-list-detail .w4os-list tbody tr:hover { background: color-mix(in srgb, currentColor 5%, transparent); }
+.w4os-list-detail .w4os-list tbody tr:has(.w4os-row-link:focus-visible) { outline: 2px solid currentColor; outline-offset: -2px; }
+.w4os-list-detail .w4os-list tbody tr.is-selected { background: color-mix(in srgb, currentColor 12%, transparent); box-shadow: inset 3px 0 0 currentColor; }
 .w4os-subtitle { font-size: .875em; opacity: .75; }
 .w4os-folded span + span::before { content: " · "; }
 @container w4os-list (min-width: 36rem) { .w4os-fold-md { display: none; } }

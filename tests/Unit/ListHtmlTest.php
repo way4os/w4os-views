@@ -168,6 +168,17 @@ describe('the assets of a list with its detail', function () {
             ->and($tp)->toContain('window.W4OSTeleportLinks = { setup };');
     });
 
+    test('make the whole row the target of a list with its detail, as tabs: no link look, a hover, the selected row marked', function () {
+        $css = (string) file_get_contents(dirname(__DIR__, 2).'/assets/'.ListDetailView::ASSETS['css'][0]);
+
+        // Its link stays (the address of the result, Back, a shared link), stretched over the row and plain text
+        expect($css)->toContain('.w4os-list-detail .w4os-list tbody tr { position: relative; cursor: pointer; }',
+            '.w4os-list-detail .w4os-row-link { color: inherit; text-decoration: none; }',
+            '.w4os-list-detail .w4os-row-link::after { content: ""; position: absolute; inset: 0; }',
+            '.w4os-list-detail .w4os-list tbody tr:hover', '.w4os-list-detail .w4os-list tbody tr:has(.w4os-row-link:focus-visible)')
+            ->and($css)->not->toMatch('/#[0-9a-f]{3,8}\b|rgba?\(/i');
+    });
+
     test('move the selection with the arrows, as a list of tabs: the next or the previous result, its detail shown', function () {
         $js = (string) file_get_contents(dirname(__DIR__, 2).'/assets/'.ListDetailView::ASSETS['js'][0]);
 
