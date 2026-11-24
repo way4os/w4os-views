@@ -183,6 +183,19 @@ describe('the assets of a teleport link', function () {
     test('have the script: the client told by the user agent, the menu kept within the window, closed by Escape or a click outside, the address copied and said, or selected without a clipboard', function () {
         $js = (string) file_get_contents(dirname(__DIR__, 2).'/assets/'.TeleportLink::ASSETS['js'][0]);
 
-        expect($js)->toContain("new RegExp(tp.dataset.viewerPattern, 'i').test(navigator.userAgent)", "main.removeAttribute('href')", "classList.add('w4os-tp-menu-end')", "event.key === 'Escape'", 'tp.contains(event.target) || close(tp)', 'navigator.clipboard ?', 'input.select()', "copy.classList.add('is-copied')");
+        expect($js)->toContain("new RegExp(tp.dataset.viewerPattern, 'i').test(navigator.userAgent)", "main.removeAttribute('href')", "classList.add('w4os-tp-menu-end')", "event.key === 'Escape'", 'tp.contains(event.target) || close(tp)', 'input.select()', "copy.classList.add('is-copied')");
+    });
+
+    test('copy in one click on a page of http too: the clipboard of the browser, else the copy of a selected text, the address shown selected only when both fail', function () {
+        $js = (string) file_get_contents(dirname(__DIR__, 2).'/assets/'.TeleportLink::ASSETS['js'][0]);
+        $clipboard = strpos($js, 'navigator.clipboard.writeText');
+        $command = strpos($js, "document.execCommand('copy')");
+
+        // A page of http has no navigator.clipboard (a secure context only): the copy of a text selected out of sight
+        expect($clipboard)->not->toBeFalse()
+            ->and($command)->not->toBeFalse()
+            ->and($js)->toContain('window.isSecureContext', '.catch(fallback)')
+            // The field to copy by hand comes last, when nothing could copy
+            ->and((int) strpos($js, 'const copied = ') < (int) strpos($js, 'select(copy, text)'))->toBeTrue();
     });
 });

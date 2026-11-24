@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- fix (links): one click copies on a page of http too (a selected text copied); the address shown to copy by hand only when nothing could
 - change (links): the menu of a teleport link in one order (teleports, maps, the address to copy, adding the grid last), its main link marked where it stands (`prefer` no longer moves it); `only`, the actions a page keeps of them
 - new (links): the main link of a teleport link the one of the action a page prefers (`prefer`: teleport for a visit from another grid), the others in the destination's order
 - new (links): adding the grid to the viewer (action addgrid) in a teleport link, first, with its icon (Tabler world-plus): the login address of a grid

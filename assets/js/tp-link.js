@@ -1,7 +1,7 @@
 // Teleport links (W4OS\Views\TeleportLink): the links of the client the page is seen from (the viewer's own browser, by its user
 // agent), the menu of all of them opened by its chevron, kept within the window, closed on Escape or a click outside, its items
-// reached with the arrows; the address copied (its button saying so for a while), or shown selected where the browser gives no
-// clipboard.
+// reached with the arrows; the address copied in one click (its button saying so for a while), by the clipboard of the browser,
+// else the copy of a selected text (a page of http), or shown selected only when neither copies.
 (() => {
     // The links of a part of the page: all of them at its load, the ones a page adds later when it calls it (W4OSTeleportLinks.setup)
     const setup = (root = document) => root.querySelectorAll('[data-w4os-tp]').forEach((tp) => {
@@ -26,6 +26,23 @@
             menuOf(tp).hidden = true;
             toggle.setAttribute('aria-expanded', 'false');
         }
+    };
+    // The copy of a text selected out of sight: what a page of http has (navigator.clipboard is for a secure context only)
+    const command = (text) => {
+        const area = document.createElement('textarea');
+        area.value = text;
+        area.setAttribute('readonly', '');
+        area.style.position = 'fixed';
+        area.style.top = '-1000px';
+        area.style.opacity = '0';
+        document.body.appendChild(area);
+        area.select();
+        let copied = false;
+        try {
+            copied = document.execCommand('copy');
+        } catch (error) {}
+        area.remove();
+        return copied;
     };
     const select = (copy, text) => {
         const input = document.createElement('input');
@@ -66,7 +83,12 @@
                 say(copy.dataset.copied || said);
                 setTimeout(() => { copy.classList.remove('is-copied'); say(said); }, 2000);
             };
-            navigator.clipboard ? navigator.clipboard.writeText(text).then(done, () => select(copy, text)) : select(copy, text);
+            // The clipboard of the browser, else the copy of a selected text; the address shown selected only when nothing could copy
+            const fallback = () => {
+                const copied = command(text);
+                copied ? done() : select(copy, text);
+            };
+            navigator.clipboard && window.isSecureContext ? navigator.clipboard.writeText(text).then(done).catch(fallback) : fallback();
         }
     });
     document.addEventListener('keydown', (event) => {
