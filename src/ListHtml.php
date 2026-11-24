@@ -144,7 +144,8 @@ final class ListHtml
     }
 
     /**
-     * A value of a row or of an item, as its column or its field says: its labels (`values`), a count, a number (`decimals`), a date,
+     * A value of a row or of an item, as its column or its field says: its labels (`values`), a count, a number (`decimals`, `unit`), a
+     * duration (minutes), a text with its line breaks, a date,
      * a link (`link`: the attribute that gives its address), a small table of records (`table`: its `columns`), a mark; else its text.
      *
      * @param array<string,mixed> $column
@@ -161,7 +162,11 @@ final class ListHtml
             $value === null || $value === '' || $value === [] => '',
             $type === 'table' => self::records((array) $value, (array) ($column['columns'] ?? []), $options),
             isset($column['count']) && is_numeric($value) => self::e($t((string) $column['count'], [self::number($value, $language, 0)])),
-            $type === 'number' && is_numeric($value) => self::e(self::number($value, $language, (int) ($column['decimals'] ?? 0))),
+            // With its unit when it has one (60 min, 1,024 m²), not cut from it
+            $type === 'number' && is_numeric($value) => self::e(self::number($value, $language, (int) ($column['decimals'] ?? 0)).(isset($column['unit']) && $column['unit'] !== '' ? "\u{00A0}".$column['unit'] : '')),
+            $type === 'duration' && is_numeric($value) => self::e(self::duration((int) $value, $t)),
+            // A text of several lines keeps them (a description: its addresses, its paragraphs)
+            $type === 'text' && is_string($value) && !isset($column['values']) => nl2br(self::e($value)),
             in_array($type, ['date', 'datetime'], true) => '<time datetime="'.self::e(self::iso($value)).'" title="'.self::e(Dates::format(is_scalar($value) ? $value : null, $language, 'full')).'">'
                 .self::e(Dates::format(is_scalar($value) ? $value : null, $language, $type === 'date' ? 'date' : (string) ($options['dates'] ?? 'list'))).'</time>',
             $type === 'boolean' => $value ? '✓' : '',
@@ -245,6 +250,17 @@ final class ListHtml
     private static function columnClass(ColumnView $column): string
     {
         return 'w4os-col-'.self::e($column->type).($column->primary ? '' : ' w4os-tier-'.(self::TIERS[$column->priority] ?? 'xxl'));
+    }
+
+    /** A duration in minutes, in the units of the catalog: minutes under an hour (45 min), hours from 60 (1 h, 1 h 30). */
+    private static function duration(int $minutes, \Closure $t): string
+    {
+        if ($minutes < 60) {
+            return $t('unit_minutes', [(string) $minutes]);
+        }
+        $rest = $minutes % 60;
+
+        return $rest === 0 ? $t('unit_hours', [(string) intdiv($minutes, 60)]) : $t('unit_hours_minutes', [(string) intdiv($minutes, 60), sprintf('%02d', $rest)]);
     }
 
     /** A number in the language of the page, with its decimals. */

@@ -45,6 +45,30 @@ describe('the HTML of a list', function () {
             ->and(ListHtml::table(ListView::of(land_list(), $lots, [], []), ['t' => bracketed(), 'language' => 'en']))->toContain('>1,500<', '>2.93<');
     });
 
+    test('says a number with its unit when its column or its field has one: an event of 60 minutes, an area in m²', function () {
+        $html = ListHtml::cell(['name' => 'duration', 'type' => 'number', 'unit' => 'min'], ['duration' => 60], ['language' => 'fr']);
+
+        expect($html)->toBe("60\u{00A0}min")
+            ->and(ListHtml::cell(['name' => 'area', 'type' => 'number', 'unit' => 'm²'], ['area' => 1024], ['language' => 'en']))->toBe("1,024\u{00A0}m²")
+            ->and(ListHtml::cell(['name' => 'area', 'type' => 'number'], ['area' => 1024], ['language' => 'en']))->toBe('1,024');
+    });
+
+    test('says a duration in minutes under an hour, in hours from 60, with the units of the catalog', function () {
+        $duration = static fn(int $minutes): string => ListHtml::cell(['name' => 'duration', 'type' => 'duration'], ['duration' => $minutes], ['t' => bracketed(), 'language' => 'fr']);
+
+        expect($duration(45))->toBe('[unit_minutes] 45')
+            ->and($duration(60))->toBe('[unit_hours] 1')
+            ->and($duration(90))->toBe('[unit_hours_minutes] 1 30')
+            ->and($duration(125))->toBe('[unit_hours_minutes] 2 05')
+            ->and($duration(120))->toBe('[unit_hours] 2');
+    });
+
+    test('keeps the line breaks of a text, escaped: a description of several lines', function () {
+        $html = ListHtml::cell(['name' => 'description', 'type' => 'text'], ['description' => "hop://grid:8002/Region\nsecondlife://grid:8002/Region\nCome <now>"], []);
+
+        expect($html)->toBe("hop://grid:8002/Region<br />\nsecondlife://grid:8002/Region<br />\nCome &lt;now&gt;");
+    });
+
     test('keeps the whole query of the page in its sorts and its pages (the criteria of a search), back to the first page on a new sort', function () use ($lots, $query) {
         $html = ListHtml::table(ListView::of(land_list(), $lots, ['total' => 120, 'page' => 2, 'perPage' => 50], $query), ['t' => bracketed()]);
         $criteria = 'q=sea&category=land&rating%5B0%5D=general&rating%5B1%5D=moderate';
@@ -129,5 +153,11 @@ describe('the assets of a list with its detail', function () {
 
         expect($js)->toContain('a[data-w4os-select]', 'event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0', 'getElementById(region)', 'replaceWith(next)', 'window.W4OSTeleportLinks?.setup(next)', 'history.pushState', "addEventListener('popstate'", "setAttribute('aria-current', 'true')")
             ->and($tp)->toContain('window.W4OSTeleportLinks = { setup };');
+    });
+
+    test('move the selection with the arrows, as a list of tabs: the next or the previous result, its detail shown', function () {
+        $js = (string) file_get_contents(dirname(__DIR__, 2).'/assets/'.ListDetailView::ASSETS['js'][0]);
+
+        expect($js)->toContain("event.key === 'ArrowDown'", "event.key === 'ArrowUp'", '.focus()', 'swap(box, next.href, true)');
     });
 });

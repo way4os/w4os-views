@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- new (lists): the arrows move the selection of a list with its detail, as a list of tabs
+- new (lists): a number with its unit (60 min, 1,024 m²); a duration in minutes or hours (unit_minutes, unit_hours, unit_hours_minutes)
+- fix (lists): a text keeps its line breaks, escaped (a description of several lines)
 - fix (links): one click copies on a page of http too (a selected text copied); the address shown to copy by hand only when nothing could
 - change (links): the menu of a teleport link in one order (teleports, maps, the address to copy, adding the grid last), its main link marked where it stands (`prefer` no longer moves it); `only`, the actions a page keeps of them
 - new (links): the main link of a teleport link the one of the action a page prefers (`prefer`: teleport for a visit from another grid), the others in the destination's order

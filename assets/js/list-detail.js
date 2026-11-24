@@ -1,6 +1,7 @@
 // A list with the detail of the item it selects (W4OS\Views\ListDetailView): a row's link fetches the page of that item and swaps
 // its detail in place (its teleport links set up), the selected row marked, the address kept in the history (Back shows the detail
-// before); a link opened in a new tab, or a page the script cannot read, loads as it would without it.
+// before); a link opened in a new tab, or a page the script cannot read, loads as it would without it. The arrows move the selection,
+// as in a list of tabs.
 (() => {
     const swap = async (box, url, push) => {
         const region = box.dataset.region;
@@ -34,6 +35,22 @@
         }
         event.preventDefault();
         swap(box, link.href, true);
+    });
+    // As a list of tabs: the arrows move to the next or the previous result and show its detail
+    document.addEventListener('keydown', (event) => {
+        const link = event.target.closest?.('a[data-w4os-select]');
+        const box = link?.closest('[data-w4os-list-detail]');
+        const step = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
+        if (!box || step === 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+            return;
+        }
+        const links = [...box.querySelectorAll('a[data-w4os-select]')];
+        const next = links[links.indexOf(link) + step];
+        event.preventDefault();
+        if (next) {
+            next.focus();
+            swap(box, next.href, true).then(() => next.focus());
+        }
     });
     window.addEventListener('popstate', () => {
         document.querySelectorAll('[data-w4os-list-detail]').forEach((box) => swap(box, window.location.href, false));
