@@ -162,7 +162,8 @@ final class ListHtml
             : '<section id="'.$region.'" class="w4os-detail" aria-labelledby="'.$region.'-title">'.self::item($view->detail, $options, $view->region).'</section>';
 
         return '<div class="w4os-list-detail" data-w4os-list-detail data-region="'.$region.'" data-param="'.self::e($view->param).'">'
-            .'<div class="w4os-ld'.($view->detail === null ? '' : ' has-detail').'"><div class="w4os-ld-list">'.self::table($view->list, $options, $view).'</div>'.$detail.'</div></div>';
+            // The rows without their pictures when the page asks it (a search: the name and the time, the picture in the detail)
+            .'<div class="w4os-ld'.($view->detail === null ? '' : ' has-detail').'"><div class="w4os-ld-list">'.self::table($view->list, ($options['rowPictures'] ?? true) === false ? array_diff_key($options, ['picture' => 1]) : $options, $view).'</div>'.$detail.'</div></div>';
     }
 
     /**

@@ -143,6 +143,22 @@ describe('a list with the detail of the item it selects', function () {
             ->and(substr_count($html, 'aaaa.jpg'))->toBe(1);
     });
 
+    test('leaves the pictures out of the rows when the page asks it, the detail keeping its own, its height capped', function () use ($item) {
+        $list = ['type' => 'land', 'columns' => [['name' => 'name', 'label' => 'column_name', 'type' => 'text', 'picture' => 'picture', 'default' => 'place']]];
+        $rows = [['uuid' => 'p1', 'name' => 'Sea view', 'picture' => 'bbbb'], ['uuid' => 'p2', 'name' => 'Hill', 'picture' => 'aaaa']];
+        $picture = fn (?string $picture, ?string $default, string $name) => '<img src="/'.$picture.'.jpg">';
+        $view = ListDetailView::of(ListView::of($list, $rows, [], ['id' => 'p2']), ['picture' => 'aaaa'] + $item, []);
+        $html = ListHtml::listDetail($view, ['t' => bracketed(), 'picture' => $picture, 'rowPictures' => false]);
+        $css = (string) file_get_contents(dirname(__DIR__, 2).'/assets/'.ListDetailView::ASSETS['css'][0]);
+
+        expect($html)->not->toContain('bbbb.jpg')
+            ->and(substr_count($html, 'aaaa.jpg'))->toBe(1)
+            ->and($html)->toContain('<div class="w4os-detail-picture"><img src="/aaaa.jpg"></div>')
+            // By default a row shows its picture, as before
+            ->and(ListHtml::listDetail($view, ['t' => bracketed(), 'picture' => $picture]))->toContain('bbbb.jpg')
+            ->and($css)->toContain('max-height: 280px;');
+    });
+
     test('puts its teleport link on the field that names the place (`teleport`), never a second line of its name', function () use ($item) {
         $groups = [['label' => 'group_lot', 'fields' => [
             ['name' => 'price', 'label' => 'field_price', 'type' => 'number'],
