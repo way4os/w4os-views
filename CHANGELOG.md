@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- change (lists): a list with its detail reads as tabs in any theme: transparent, the selected row tinted (--w4os-accent), the detail joined
 - fix (detail): a place without a picture shows none, never an empty frame
 - fix (lists): a list with its detail may leave the pictures out of its rows (rowPictures); the picture of a detail 280 px high at most
 - new (detail): a place with its picture in full under its name; a bare text (its description) after the fields, without its label

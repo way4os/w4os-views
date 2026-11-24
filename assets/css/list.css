@@ -19,9 +19,14 @@
 .w4os-list-detail .w4os-row-link::after { content: ""; position: absolute; inset: 0; }
 .w4os-list-detail .w4os-list tbody tr :is(a:not(.w4os-row-link), button) { position: relative; z-index: 1; }
 .w4os-list-detail .w4os-row-link:focus-visible { outline: none; }
-.w4os-list-detail .w4os-list tbody tr:hover { background: color-mix(in srgb, currentColor 5%, transparent); }
+/* In any theme: the table transparent (a theme's own background of its cells would hide the rows), the accent of the page
+   (--w4os-accent, a site gives it its primary color) else the text's */
+.w4os-list-detail .w4os-list, .w4os-list-detail .w4os-list :is(th, td) { background-color: transparent; }
+.w4os-list-detail .w4os-list tbody tr:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
 .w4os-list-detail .w4os-list tbody tr:has(.w4os-row-link:focus-visible) { outline: 2px solid currentColor; outline-offset: -2px; }
-.w4os-list-detail .w4os-list tbody tr.is-selected { background: color-mix(in srgb, currentColor 12%, transparent); box-shadow: inset 3px 0 0 currentColor; }
+.w4os-list-detail .w4os-list tbody tr.is-selected { background: color-mix(in srgb, var(--w4os-accent, currentColor) 22%, transparent); box-shadow: inset 4px 0 0 var(--w4os-accent, currentColor); }
+/* The detail joined to its list as the panel of a tab: the accent at its start */
+.w4os-ld.has-detail .w4os-detail { border-inline-start: 4px solid var(--w4os-accent, currentColor); padding-inline-start: 1rem; }
 .w4os-subtitle { font-size: .875em; opacity: .75; }
 .w4os-folded span + span::before { content: " · "; }
 @container w4os-list (min-width: 36rem) { .w4os-fold-md { display: none; } }

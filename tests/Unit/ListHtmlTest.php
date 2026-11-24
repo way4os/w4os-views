@@ -219,6 +219,17 @@ describe('the assets of a list with its detail', function () {
             ->and($css)->not->toMatch('/#[0-9a-f]{3,8}\b|rgba?\(/i');
     });
 
+    test('read as tabs in any theme: the table transparent, the selected row tinted with the accent and its bar, a visible hover', function () {
+        $css = (string) file_get_contents(dirname(__DIR__, 2).'/assets/'.ListDetailView::ASSETS['css'][0]);
+
+        expect($css)->toContain(
+            '.w4os-list-detail .w4os-list, .w4os-list-detail .w4os-list :is(th, td) { background-color: transparent; }',
+            '.w4os-list-detail .w4os-list tbody tr:hover { background: color-mix(in srgb, currentColor 10%, transparent); }',
+            '.w4os-list-detail .w4os-list tbody tr.is-selected { background: color-mix(in srgb, var(--w4os-accent, currentColor) 22%, transparent); box-shadow: inset 4px 0 0 var(--w4os-accent, currentColor); }',
+            '.w4os-ld.has-detail .w4os-detail { border-inline-start: 4px solid var(--w4os-accent, currentColor);',
+        )->and($css)->not->toMatch('/#[0-9a-f]{3,8}\b|rgba?\(|--pico-|--q2-/i');
+    });
+
     test('move the selection with the arrows, as a list of tabs: the next or the previous result, its detail shown', function () {
         $js = (string) file_get_contents(dirname(__DIR__, 2).'/assets/'.ListDetailView::ASSETS['js'][0]);
 
