@@ -41,6 +41,10 @@
     .w4os-ld.has-detail .w4os-detail { position: sticky; top: 1rem; max-height: calc(100vh - 2rem); overflow: auto; }
 }
 .w4os-detail-header { display: flex; align-items: center; gap: .75rem; }
+/* The picture of a place in full under its name, as wide as the detail; its description a text of its own after the fields */
+.w4os-detail-picture { margin: .75rem 0; }
+.w4os-detail-picture > *, .w4os-detail-picture img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; max-width: 100%; object-fit: cover; }
+.w4os-detail-text { margin: 1rem 0 0; }
 .w4os-detail-title { margin: 0; }
 .w4os-detail-title:focus { outline: none; }
 .w4os-detail-go { margin: .5rem 0 1rem; }

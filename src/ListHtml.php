@@ -102,7 +102,10 @@ final class ListHtml
         $sub = 'h'.min(6, (int) substr($level, 1) + 1);
         $picture = $item->pictured && isset($options['picture']) && $options['picture'] instanceof \Closure
             ? (string) ($options['picture'])($item->picture, $item->pictureDefault, $item->name) : '';
-        $html = '<header class="w4os-detail-header">'.$picture.'<'.$level.' id="'.self::e($region).'-title" class="w4os-detail-title" tabindex="-1">'.self::e($item->name).'</'.$level.'></header>';
+        // A person in the header beside the name; a place in full under it, as the search of the viewers shows it
+        $person = $item->pictureDefault === 'person';
+        $html = '<header class="w4os-detail-header">'.($person ? $picture : '').'<'.$level.' id="'.self::e($region).'-title" class="w4os-detail-title" tabindex="-1">'.self::e($item->name).'</'.$level.'></header>'
+            .($person || $picture === '' ? '' : '<div class="w4os-detail-picture">'.$picture.'</div>');
         $links = $item->item['tpLinks'] ?? null;
         $links = is_array($links) && $links !== [] ? $links : null;
         $teleport = fn (string $label): string => TeleportLink::html((array) $links, $label, (string) ($options['client'] ?? 'browser'), (array) ($options['texts'] ?? []), (string) ($options['pattern'] ?? ''));
@@ -119,14 +122,22 @@ final class ListHtml
         }
         foreach ($item->groups as $group) {
             $fields = '';
+            // A text that reads without its label (its description): a text of its own after the fields
+            $texts = '';
             foreach ($group['fields'] as $field) {
+                if (!empty($field['bare']) && ($field['type'] ?? 'text') === 'text') {
+                    $text = self::cell($field, $item->item, $options);
+                    $text === '' || $texts .= '<p class="w4os-detail-text">'.$text.'</p>';
+                    continue;
+                }
                 $value = $links !== null && ($field['name'] ?? null) === $placed
                     ? $teleport((string) Rows::value($item->item, (string) $field['name']))
                     : self::cell($field, $item->item, $options + ['dates' => 'long']);
                 $value === '' || $fields .= '<div class="w4os-field w4os-field-'.self::e((string) ($field['type'] ?? 'text')).'"><dt>'.self::e($t((string) ($field['label'] ?? ''))).'</dt><dd>'.$value.'</dd></div>';
             }
-            if ($fields !== '') {
-                $html .= (count($item->groups) > 1 && $group['label'] !== '' ? '<'.$sub.' class="w4os-detail-group">'.self::e($t($group['label'])).'</'.$sub.'>' : '').'<dl class="w4os-fields">'.$fields.'</dl>';
+            if ($fields !== '' || $texts !== '') {
+                $html .= (count($item->groups) > 1 && $group['label'] !== '' ? '<'.$sub.' class="w4os-detail-group">'.self::e($t($group['label'])).'</'.$sub.'>' : '')
+                    .($fields === '' ? '' : '<dl class="w4os-fields">'.$fields.'</dl>').$texts;
             }
         }
         if (isset($options['actions']) && $options['actions'] instanceof \Closure) {

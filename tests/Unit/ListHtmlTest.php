@@ -127,6 +127,22 @@ describe('a list with the detail of the item it selects', function () {
             ->toContain('<div class="w4os-ld"><div class="w4os-ld-list">', '<section id="w4os-detail" class="w4os-detail" hidden></section>')->not->toContain('aria-current');
     });
 
+    test('shows a place with its picture in full under its name, its description a text of its own without its label', function () use ($item) {
+        $groups = [['label' => 'group_lot', 'fields' => [
+            ['name' => 'price', 'label' => 'field_price', 'type' => 'number'],
+            ['name' => 'description', 'label' => 'field_description', 'type' => 'text', 'bare' => true],
+        ]]];
+        $list = ['type' => 'land', 'columns' => [['name' => 'name', 'label' => 'column_name', 'type' => 'text', 'picture' => 'picture', 'default' => 'place']]];
+        $view = ListDetailView::of(ListView::of($list, [], [], ['id' => 'p2']), ['picture' => 'aaaa', 'description' => "Quiet\nand green"] + $item, $groups);
+        $html = ListHtml::item($view->detail, ['t' => bracketed(), 'language' => 'en', 'picture' => fn (?string $picture, ?string $default, string $name) => '<img src="/'.$picture.'.jpg">']);
+
+        expect($html)->toContain('<header class="w4os-detail-header"><h2 id="w4os-detail-title"', '<div class="w4os-detail-picture"><img src="/aaaa.jpg"></div>')
+            ->toContain('<dl class="w4os-fields"><div class="w4os-field w4os-field-number"><dt>[field_price]</dt><dd>800</dd></div></dl><p class="w4os-detail-text">Quiet<br />'."\n".'and green</p>')
+            ->not->toContain('[field_description]')
+            // The picture once: in full, not in the header too
+            ->and(substr_count($html, 'aaaa.jpg'))->toBe(1);
+    });
+
     test('puts its teleport link on the field that names the place (`teleport`), never a second line of its name', function () use ($item) {
         $groups = [['label' => 'group_lot', 'fields' => [
             ['name' => 'price', 'label' => 'field_price', 'type' => 'number'],
