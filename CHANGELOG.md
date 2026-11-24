@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- fix (links): the chevron of a teleport link stays with its last word; the link still wraps inside its text
 - change (detail): its teleport link on the field that names its place (`teleport`), never a second line of its name
 - new (lists): the arrows move the selection of a list with its detail, as a list of tabs
 - new (lists): a number with its unit (60 min, 1,024 m²); a duration in minutes or hours (unit_minutes, unit_hours, unit_hours_minutes)

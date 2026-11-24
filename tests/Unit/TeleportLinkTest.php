@@ -173,7 +173,7 @@ describe('the assets of a teleport link', function () {
     test('are in the package for any bridge to serve: an inline style without colours of its own, the same wherever it is', function () {
         $css = (string) file_get_contents(dirname(__DIR__, 2).'/assets/'.TeleportLink::ASSETS['css'][0]);
 
-        expect($css)->toContain('.w4os-tp { display: inline; }', '.w4os-tp-more { position: relative; display: inline; white-space: nowrap; }', '.w4os-tp-menu { position: absolute; left: 0;', '.w4os-tp-menu[hidden] { display: none; }', '.w4os-tp[data-client="browser"] [data-for="viewer"], .w4os-tp[data-client="viewer"] [data-for="browser"] { display: none; }', '.w4os-tp-main:not([href]) { color: inherit;', '.w4os-tp-menu .w4os-tp-item { display: flex;')
+        expect($css)->toContain('.w4os-tp { display: inline; white-space: nowrap; }', '.w4os-tp-more { position: relative; display: inline; white-space: nowrap; }', '.w4os-tp-menu { position: absolute; left: 0;', '.w4os-tp-menu[hidden] { display: none; }', '.w4os-tp[data-client="browser"] [data-for="viewer"], .w4os-tp[data-client="viewer"] [data-for="browser"] { display: none; }', '.w4os-tp-main:not([href]) { color: inherit;', '.w4os-tp-menu .w4os-tp-item { display: flex;')
             ->and($css)->not->toContain('w4os-tp-card')
             ->and($css)->not->toMatch('/#[0-9a-f]{3,8}\b|rgba?\(|--pico-|--q2-/i')
             // No block, flex or grid layout of the inline component, no right alignment
@@ -184,6 +184,13 @@ describe('the assets of a teleport link', function () {
         $js = (string) file_get_contents(dirname(__DIR__, 2).'/assets/'.TeleportLink::ASSETS['js'][0]);
 
         expect($js)->toContain("new RegExp(tp.dataset.viewerPattern, 'i').test(navigator.userAgent)", "main.removeAttribute('href')", "classList.add('w4os-tp-menu-end')", "event.key === 'Escape'", 'tp.contains(event.target) || close(tp)', 'input.select()', "copy.classList.add('is-copied')");
+    });
+
+    test('keep the chevron with the last word of the link: its text wraps, never between them', function () {
+        $css = (string) file_get_contents(dirname(__DIR__, 2).'/assets/'.TeleportLink::ASSETS['css'][0]);
+
+        // A break between the link and its buttons follows their common parent, the link breaks inside its own text
+        expect($css)->toContain('.w4os-tp { display: inline; white-space: nowrap; }', '.w4os-tp-main { white-space: normal; }');
     });
 
     test('copy in one click on a page of http too: the clipboard of the browser, else the copy of a selected text, the address shown selected only when both fail', function () {
