@@ -90,7 +90,8 @@ final class ListHtml
     }
 
     /**
-     * An item: its picture and its name, its teleport link when it has links (`tpLinks`), its groups of fields, its actions.
+     * An item: its picture and its name, its teleport link when it has links (`tpLinks`: on the value of the field that names the
+     * place, `teleport`, else a line of its own), its groups of fields, its actions.
      *
      * @param array<string,mixed> $options
      */
@@ -103,15 +104,25 @@ final class ListHtml
             ? (string) ($options['picture'])($item->picture, $item->pictureDefault, $item->name) : '';
         $html = '<header class="w4os-detail-header">'.$picture.'<'.$level.' id="'.self::e($region).'-title" class="w4os-detail-title" tabindex="-1">'.self::e($item->name).'</'.$level.'></header>';
         $links = $item->item['tpLinks'] ?? null;
-        if (is_array($links) && $links !== []) {
+        $links = is_array($links) && $links !== [] ? $links : null;
+        $teleport = fn (string $label): string => TeleportLink::html((array) $links, $label, (string) ($options['client'] ?? 'browser'), (array) ($options['texts'] ?? []), (string) ($options['pattern'] ?? ''));
+        // Its teleport link on the field that names the place (`teleport`), else a line of its own under its name
+        $placed = null;
+        foreach ($item->groups as $group) {
+            foreach ($group['fields'] as $field) {
+                $placed ??= !empty($field['teleport']) && trim((string) Rows::value($item->item, (string) ($field['name'] ?? ''))) !== '' ? (string) $field['name'] : null;
+            }
+        }
+        if ($links !== null && $placed === null) {
             $label = isset($options['go']) && $options['go'] !== '' ? $t((string) $options['go']) : $item->name;
-            $go = TeleportLink::html($links, $label, (string) ($options['client'] ?? 'browser'), (array) ($options['texts'] ?? []), (string) ($options['pattern'] ?? ''));
-            $html .= '<p class="w4os-detail-go">'.$go.'</p>';
+            $html .= '<p class="w4os-detail-go">'.$teleport($label).'</p>';
         }
         foreach ($item->groups as $group) {
             $fields = '';
             foreach ($group['fields'] as $field) {
-                $value = self::cell($field, $item->item, $options + ['dates' => 'long']);
+                $value = $links !== null && ($field['name'] ?? null) === $placed
+                    ? $teleport((string) Rows::value($item->item, (string) $field['name']))
+                    : self::cell($field, $item->item, $options + ['dates' => 'long']);
                 $value === '' || $fields .= '<div class="w4os-field w4os-field-'.self::e((string) ($field['type'] ?? 'text')).'"><dt>'.self::e($t((string) ($field['label'] ?? ''))).'</dt><dd>'.$value.'</dd></div>';
             }
             if ($fields !== '') {

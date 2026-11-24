@@ -127,6 +127,19 @@ describe('a list with the detail of the item it selects', function () {
             ->toContain('<div class="w4os-ld"><div class="w4os-ld-list">', '<section id="w4os-detail" class="w4os-detail" hidden></section>')->not->toContain('aria-current');
     });
 
+    test('puts its teleport link on the field that names the place (`teleport`), never a second line of its name', function () use ($item) {
+        $groups = [['label' => 'group_lot', 'fields' => [
+            ['name' => 'price', 'label' => 'field_price', 'type' => 'number'],
+            ['name' => 'location', 'label' => 'field_location', 'type' => 'text', 'teleport' => true],
+        ]]];
+        $view = ListDetailView::of(ListView::of(land_list(), [], [], ['id' => 'p2']), $item + ['location' => 'Hill Top'], $groups);
+        $html = ListHtml::item($view->detail, ['t' => bracketed(), 'language' => 'en', 'texts' => ['more' => 'More']]);
+
+        expect($html)->not->toContain('w4os-detail-go')
+            ->toContain('<dt>[field_location]</dt><dd><span class="w4os-tp" data-w4os-tp data-client="browser"><a class="w4os-tp-main" href="hop://h:8002/Hill" data-browser="hop://h:8002/Hill">Hill Top')
+            ->and(substr_count($html, '>Hill<'))->toBe(1);
+    });
+
     test('shows the detail: its teleport link, its groups as terms and values, a small table of records, its actions', function () use ($lots, $item, $groups) {
         $view = ListDetailView::of(ListView::of(land_list(), $lots, [], ['id' => 'p2']), $item, $groups);
         $html = ListHtml::item($view->detail, ['t' => bracketed(), 'language' => 'en', 'texts' => ['more' => 'More'], 'go' => 'hg_visit_go', 'actions' => fn ($item) => '<button>Buy '.$item->name.'</button>']);
