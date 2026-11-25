@@ -167,6 +167,16 @@ describe('a list with the detail of the item it selects', function () {
             ->and($css)->toContain('max-height: 280px;');
     });
 
+    test('shows the picture of a detail whole, never cropped: its height follows its ratio, within its maximum size', function () {
+        $css = (string) file_get_contents(dirname(__DIR__, 2).'/assets/'.ListDetailView::ASSETS['css'][0]);
+        preg_match_all('/[^{}]*w4os-detail-picture[^{]*\{[^}]*\}/', $css, $rules);
+        $rules = implode("\n", $rules[0]);
+
+        expect($rules)->toContain('object-fit: contain;', 'max-width: 100%;', 'max-height: 280px;', 'height: auto;')
+            ->not->toContain('cover')
+            ->not->toContain('aspect-ratio');
+    });
+
     test('puts its teleport link on the field that names the place (`teleport`), never a second line of its name', function () use ($item) {
         $groups = [['label' => 'group_lot', 'fields' => [
             ['name' => 'price', 'label' => 'field_price', 'type' => 'number'],
