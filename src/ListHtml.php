@@ -100,7 +100,7 @@ final class ListHtml
         $t = self::texts($options);
         $level = in_array($options['level'] ?? 'h2', ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'], true) ? (string) ($options['level'] ?? 'h2') : 'h2';
         $sub = 'h'.min(6, (int) substr($level, 1) + 1);
-        // A place without a picture shows none (never an empty frame); a person its initials
+        // A place without a picture shows none (never an empty frame); a person the silhouette (Picture)
         $picture = $item->pictured && isset($options['picture']) && $options['picture'] instanceof \Closure && ($item->picture !== null || $item->pictureDefault === 'person')
             ? (string) ($options['picture'])($item->picture, $item->pictureDefault, $item->name) : '';
         // A person in the header beside the name; a place in full under it, as the search of the viewers shows it
